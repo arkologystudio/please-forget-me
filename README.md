@@ -63,7 +63,6 @@ exec app npx prisma migrate dev --name init
 ## Accessing the Application
 
 - **Next.js App:** [http://localhost:3000](http://localhost:3000)
-- **Email Service:** [http://localhost:4000](http://localhost:4000)
 - **PostgreSQL Database:** Accessible via `localhost:5432` using a PostgreSQL client (e.g., pgAdmin, DBeaver)
 
 ## Email Service
