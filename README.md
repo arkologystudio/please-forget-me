@@ -15,8 +15,8 @@ A scalable web application built with Next.js, TypeScript, and PostgreSQL. All s
 Ensure you have the following installed on your machine:
 
 - [Docker](https://www.docker.com/get-started) & [Docker Compose](https://docs.docker.com/compose/install/)
-- [Node.js](https://nodejs.org/en/download/) (v14 or later)
-- [npm](https://www.npmjs.com/get-npm) or [Yarn](https://yarnpkg.com/getting-started/install)
+- [Node.js](https://nodejs.org/en/download/) (v22 or later)
+- [npm](https://www.npmjs.com/get-npm) 
 
 ## Installation
 
@@ -31,8 +31,6 @@ Ensure you have the following installed on your machine:
 
    ```bash
    npm install
-   # or
-   yarn install
    ```
 
 3. **Set Up Environment Variables**
