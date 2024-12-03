@@ -1,8 +1,8 @@
 # Please Forget Me
 
-A scalable web application built with Next.js, TypeScript, and PostgreSQL, featuring a dedicated Email Service. All services are containerized using Docker Compose for streamlined development and deployment.
+A scalable web application built with Next.js, TypeScript, and PostgreSQL. All services are containerized using Docker Compose for streamlined development.
 
-## 🚀 Technologies Used
+## Technologies Used
 
 - **Next.js**: React framework for server-side rendering and static site generation.
 - **TypeScript**: Enhances JavaScript with static typing.
@@ -10,7 +10,7 @@ A scalable web application built with Next.js, TypeScript, and PostgreSQL, featu
 - **Prisma**: Modern ORM for database interactions.
 - **Docker & Docker Compose**: Containerization and orchestration of services.
 
-## 🛠 Prerequisites
+## Prerequisites
 
 Ensure you have the following installed on your machine:
 
@@ -18,7 +18,7 @@ Ensure you have the following installed on your machine:
 - [Node.js](https://nodejs.org/en/download/) (v14 or later)
 - [npm](https://www.npmjs.com/get-npm) or [Yarn](https://yarnpkg.com/getting-started/install)
 
-## 🔧 Installation
+## Installation
 
 1. **Clone the Repository**
 
@@ -64,7 +64,7 @@ Ensure you have the following installed on your machine:
    echo ".env" >> .gitignore
    ```
 
-## 🐳 Running the Application
+## Running the Application
 
 Start all services using Docker Compose:
 
@@ -75,7 +75,7 @@ docker-compose up --build -d
 - **`--build`**: Rebuilds the Docker images if there are changes.
 - **`-d`**: Runs the containers in detached mode.
 
-## 📦 Running Database Migrations
+## Running Database Migrations
 
 If migrations are not automatically applied on startup, run them manually:
 
@@ -83,10 +83,10 @@ If migrations are not automatically applied on startup, run them manually:
 docker-compose exec app npx prisma migrate dev --name init
 ```
 
-## 🌐 Accessing the Application
+## Accessing the Application
 
 - **Next.js App:** [http://localhost:3000](http://localhost:3000)
 - **Email Service:** [http://localhost:4000](http://localhost:4000)
 - **PostgreSQL Database:** Accessible via `localhost:5432` using a PostgreSQL client (e.g., pgAdmin, DBeaver)
 
-## 📧 Email Service
+## Email Service
