@@ -39,30 +39,7 @@ Ensure you have the following installed on your machine:
 
    Create a `.env` file in the project root:
 
-   ```dotenv
-   # Database Configuration
-   POSTGRES_USER=myuser
-   POSTGRES_PASSWORD=mypassword
-   POSTGRES_DB=mydb
-   DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydb?schema=public
 
-   # SendGrid Configuration
-   SENDGRID_API_KEY=your_sendgrid_api_key
-
-   # Email Service Configuration
-   EMAIL_SERVICE_PORT=4000
-   EMAIL_SERVICE_PROVIDER=SendGrid
-   EMAIL_SERVICE_USER=apikey
-   EMAIL_SERVICE_PASSWORD=your_sendgrid_api_key
-   EMAIL_FROM=your_verified_email@example.com
-   EMAIL_SERVICE_URL=http://email-service:4000
-   ```
-
-   **⚠️ Security Note:** Ensure the `.env` file is added to `.gitignore` to prevent committing sensitive information.
-
-   ```bash
-   echo ".env" >> .gitignore
-   ```
 
 ## Running the Application
 
