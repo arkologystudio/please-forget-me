@@ -57,7 +57,7 @@ docker-compose up --build -d
 If migrations are not automatically applied on startup, run them manually:
 
 ```bash
-docker-compose exec app npx prisma migrate dev --name init
+exec app npx prisma migrate dev --name init
 ```
 
 ## Accessing the Application

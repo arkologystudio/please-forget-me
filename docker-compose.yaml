@@ -25,7 +25,6 @@ services:
       - '3000:3000'
     environment:
       DATABASE_URL: postgresql://myuser:mypassword@localhost:5432/mydb
-      SENDGRID_API_KEY: your_sendgrid_api_key
     depends_on:
       - db
     command: npm run dev
