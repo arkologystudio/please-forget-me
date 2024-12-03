@@ -64,3 +64,5 @@ exec app npx prisma migrate dev --name init
 - **PostgreSQL Database:** Accessible via `localhost:5432` using a PostgreSQL client (e.g., pgAdmin, DBeaver)
 
 ## Email Service
+
+Mailgun is a powerful email delivery service used for sending, receiving, and tracking emails via a simple API. This project integrates Mailgun to handle email communication efficiently, leveraging its robust infrastructure to ensure reliable and scalable email delivery. The implementation uses the Mailgun API to send messages, making it easy to manage transactional emails directly from the application.
