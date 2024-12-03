@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model User {
+  id         Int      @id @default(autoincrement())
+  identifier String   @unique
+  threads    Thread[]
+  createdAt  DateTime @default(now())
+}
+
+model Organization {
+  id       Int      @id @default(autoincrement())
+  name     String
+  email    String
+  threads  Thread[]
+}
+
+model Thread {
+  id             Int            @id @default(autoincrement())
+  user           User           @relation(fields: [userId], references: [id])
+  userId         Int
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  organizationId Int
+  emails         Email[]
+  createdAt      DateTime       @default(now())
+  status         String         // e.g., "open", "closed"
+}
+
+model Email {
+  id        Int      @id @default(autoincrement())
+  thread    Thread   @relation(fields: [threadId], references: [id])
+  threadId  Int
+  sender    String   // "user" or "organization"
+  content   String
+  sentAt    DateTime @default(now())
+}

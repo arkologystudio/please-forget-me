@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Please Forget Me
 
-## Getting Started
+A scalable web application built with Next.js, TypeScript, and PostgreSQL, featuring a dedicated Email Service. All services are containerized using Docker Compose for streamlined development and deployment.
 
-First, run the development server:
+## 🚀 Technologies Used
+
+- **Next.js**: React framework for server-side rendering and static site generation.
+- **TypeScript**: Enhances JavaScript with static typing.
+- **PostgreSQL**: Robust relational database system.
+- **Prisma**: Modern ORM for database interactions.
+- **Docker & Docker Compose**: Containerization and orchestration of services.
+
+## 🛠 Prerequisites
+
+Ensure you have the following installed on your machine:
+
+- [Docker](https://www.docker.com/get-started) & [Docker Compose](https://docs.docker.com/compose/install/)
+- [Node.js](https://nodejs.org/en/download/) (v14 or later)
+- [npm](https://www.npmjs.com/get-npm) or [Yarn](https://yarnpkg.com/getting-started/install)
+
+## 🔧 Installation
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/yourusername/please-forget-me.git
+   cd please-forget-me
+   ```
+
+2. **Install Dependencies**
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Set Up Environment Variables**
+
+   Create a `.env` file in the project root:
+
+   ```dotenv
+   # Database Configuration
+   POSTGRES_USER=myuser
+   POSTGRES_PASSWORD=mypassword
+   POSTGRES_DB=mydb
+   DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydb?schema=public
+
+   # SendGrid Configuration
+   SENDGRID_API_KEY=your_sendgrid_api_key
+
+   # Email Service Configuration
+   EMAIL_SERVICE_PORT=4000
+   EMAIL_SERVICE_PROVIDER=SendGrid
+   EMAIL_SERVICE_USER=apikey
+   EMAIL_SERVICE_PASSWORD=your_sendgrid_api_key
+   EMAIL_FROM=your_verified_email@example.com
+   EMAIL_SERVICE_URL=http://email-service:4000
+   ```
+
+   **⚠️ Security Note:** Ensure the `.env` file is added to `.gitignore` to prevent committing sensitive information.
+
+   ```bash
+   echo ".env" >> .gitignore
+   ```
+
+## 🐳 Running the Application
+
+Start all services using Docker Compose:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker-compose up --build -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **`--build`**: Rebuilds the Docker images if there are changes.
+- **`-d`**: Runs the containers in detached mode.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📦 Running Database Migrations
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+If migrations are not automatically applied on startup, run them manually:
 
-## Learn More
+```bash
+docker-compose exec app npx prisma migrate dev --name init
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🌐 Accessing the Application
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Next.js App:** [http://localhost:3000](http://localhost:3000)
+- **Email Service:** [http://localhost:4000](http://localhost:4000)
+- **PostgreSQL Database:** Accessible via `localhost:5432` using a PostgreSQL client (e.g., pgAdmin, DBeaver)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📧 Email Service

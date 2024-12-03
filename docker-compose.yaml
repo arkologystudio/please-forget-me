@@ -1,3 +1,5 @@
+# docker-compose.yml
+
 version: '3.8'
 
 services:
@@ -10,18 +12,20 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:
-      - '5432:5432'
+      - '5432:5432'  # Maps container's 5432 to host's 5432
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     volumes:
-      - .:/app
+      - .:/app:cached
       - /app/node_modules
     ports:
       - '3000:3000'
     environment:
-      - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydb
-      - SENDGRID_API_KEY=your_sendgrid_api_key
+      DATABASE_URL: postgresql://myuser:mypassword@localhost:5432/mydb
+      SENDGRID_API_KEY: your_sendgrid_api_key
     depends_on:
       - db
     command: npm run dev
