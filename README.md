@@ -27,16 +27,9 @@ Ensure you have the following installed on your machine:
    cd please-forget-me
    ```
 
-2. **Install Dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Set Up Environment Variables**
+2. **Set Up Environment Variables**
 
    Create a `.env` file in the project root:
-
 
 
 ## Running the Application
@@ -66,3 +59,12 @@ exec app npx prisma migrate dev --name init
 ## Email Service
 
 Mailgun is a powerful email delivery service used for sending, receiving, and tracking emails via a simple API. This project integrates Mailgun to handle email communication efficiently, leveraging its robust infrastructure to ensure reliable and scalable email delivery. The implementation uses the Mailgun API to send messages, making it easy to manage transactional emails directly from the application.
+
+## Prisma
+
+Prisma is an ORM for Node.js and TypeScript that makes it easy to work with databases. It provides a type-safe way to interact with your database, making it easier to write and maintain your code.
+
+Models are defined in the `prisma/schema.prisma` file.
+
+Types are generated when the schema is updated after running `npx prisma generate`.
+
