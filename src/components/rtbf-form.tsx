@@ -56,7 +56,9 @@ export function RTBFForm() {
   });
 
   async function onSubmit(data: RTBFFormValues) {
+    console.log("Attempting to submit form data:", data);
     try {
+      console.log("Submitting form data:", data);
       const response = await fetch("/api/submit-rtbf", {
         method: "POST",
         headers: {
@@ -69,9 +71,8 @@ export function RTBFForm() {
         throw new Error("Failed to submit request");
       }
 
-      // Handle success (e.g., show success message, redirect)
+      console.log("Request submitted successfully");
     } catch (error) {
-      // Handle error (e.g., show error message)
       console.error("Error submitting form:", error);
     }
   }

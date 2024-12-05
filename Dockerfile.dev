@@ -8,6 +8,7 @@ WORKDIR /app
 
 # Install Netcat (nc) and clean up apt cache to reduce image size
 RUN apt-get update && \
+    apt-get install -y postgresql-client && \
     apt-get install -y netcat-openbsd && \
     rm -rf /var/lib/apt/lists/*
 

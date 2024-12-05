@@ -41,13 +41,6 @@ export default async function handler(
         }
       }
 
-      // Create a form submission
-      const formSubmission = await prisma.formSubmission.create({
-        data: {
-          ...data,
-        },
-      });
-
       // Fetch all organisations based on company slugs
       const organisations = await prisma.organisation.findMany({
         where: {
@@ -68,7 +61,7 @@ export default async function handler(
       // Prepare to send emails and create threads
       const emailPromises = organisations.map(async (org) => {
         // Send initial request email
-        const emailContent = await sendInitialRequestEmail(org);
+        const emailContent = await sendInitialRequestEmail(org, data);
 
         // Create a thread for this organisation
         const thread = await prisma.thread.create({
@@ -89,6 +82,14 @@ export default async function handler(
         });
 
         return { thread, email: emailRecord };
+      });
+
+      // Create a form submission
+      const formSubmission = await prisma.formSubmission.create({
+        data: {
+          userId: user.id,
+          data: JSON.parse(JSON.stringify(data)),
+        },
       });
 
       const emailResults = await Promise.allSettled(emailPromises);

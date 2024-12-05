@@ -1,6 +1,7 @@
 import mailgun from "mailgun-js";
 import dotenv from "dotenv";
 import { Organisation, User } from "@prisma/client";
+import { reasons, RTBFFormValues } from "@/lib/schemas/rtbf-form-schema";
 
 dotenv.config();
 
@@ -10,18 +11,63 @@ const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const mg = mailgun({ apiKey: API_KEY, domain: DOMAIN });
 
+// Helper function to generate the letter
+function generateLetter(data: RTBFFormValues, organisation: Organisation) {
+  const selectedReasons = data.reasons
+    .map((id) => reasons.find((r) => r.id === id))
+    .filter(Boolean);
+
+  return `Dear ${organisation.name},
+
+I am writing to request the deletion of personal data under Article 17 of the General Data Protection Regulation (GDPR) on behalf of ${
+    data.firstName
+  } ${data.lastName}.
+
+Personal Details:
+Name: ${data.firstName} ${data.lastName}
+Email: ${data.email}
+Country: ${data.country}
+
+Reasons for Deletion:
+${selectedReasons.map((r) => `- ${r?.label}`).join("\n")}
+
+${
+  data.evidence.openai?.length
+    ? `\nChatGPT Evidence Links:\n${data.evidence.openai.join("\n")}`
+    : ""
+}
+${
+  data.evidence.anthropic?.length
+    ? `\nClaude Evidence Links:\n${data.evidence.anthropic.join("\n")}`
+    : ""
+}
+${
+  data.evidence.meta?.length
+    ? `\nLLama Evidence Links:\n${data.evidence.meta.join("\n")}`
+    : ""
+}
+
+I look forward to receiving confirmation that you have complied with my request.
+
+Best regards,
+${data.firstName} ${data.lastName}`;
+}
+
 export const sendInitialRequestEmail = async (
-  recipient: Organisation
+  recipient: Organisation,
+  data: RTBFFormValues
 ): Promise<mailgun.messages.SendResponse> => {
   try {
-    const data: mailgun.messages.SendData = {
+    const emailContent = generateLetter(data, recipient);
+
+    const mailData: mailgun.messages.SendData = {
       from: `Excited User <${FROM_EMAIL}>`,
       to: recipient.email.toString(),
-      subject: "Hello with Async/Await",
-      text: "This is a test email sent using Mailgun and TypeScript with async/await!",
+      subject: "Right to be forgotten request",
+      text: emailContent,
     };
 
-    const body = await mg.messages().send(data);
+    const body = await mg.messages().send(mailData);
     console.log("Email sent:", body);
     return body;
   } catch (error) {
