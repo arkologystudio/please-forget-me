@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 import {
   sendInitialRequestEmail,
-  sendThreadConfirmationEmail,
+  sendDeliveryConfirmationEmail,
 } from "../../../client/email/mailgun";
 
 // Instantiate Prisma Client outside the handler to prevent multiple instances in serverless environments
@@ -127,7 +127,7 @@ export default async function handler(
       throw new Error("User not found. Cannot send thread confirmation email.");
     }
 
-    await sendThreadConfirmationEmail(fetchedUser);
+    await sendDeliveryConfirmationEmail(fetchedUser);
 
     res.status(200).json({ message: "Request submitted successfully" });
   } catch (error: Error | unknown) {

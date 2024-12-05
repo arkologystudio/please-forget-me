@@ -74,7 +74,7 @@ export const sendInitialRequestEmail = async (
     const emailContent = generateLetter(data, recipient);
 
     const mailData: mailgun.messages.SendData = {
-      from: `Excited User <${FROM_EMAIL}>`,
+      from: `Citizen of the Internet <${FROM_EMAIL}>`,
       to: recipient.email.toString(),
       subject: "Right to be forgotten request",
       text: emailContent,
@@ -89,15 +89,15 @@ export const sendInitialRequestEmail = async (
   }
 };
 
-export const sendThreadConfirmationEmail = async (
+export const sendDeliveryConfirmationEmail = async (
   recipient: User
 ): Promise<mailgun.messages.SendResponse> => {
   try {
     const data: mailgun.messages.SendData = {
-      from: `Excited User <${ORGANISATION_EMAIL}>`,
+      from: `Please Forget Me <${ORGANISATION_EMAIL}>`,
       to: recipient.email,
-      subject: "Hello with Async/Await",
-      text: "This is a test email sent using Mailgun and TypeScript with async/await!",
+      subject: "Delivery Confirmation: Request to be forgotten",
+      text: "This is an email to confirm that your request to be forgotten has been delivered to the relevant organisation.",
     };
 
     const body = await mg.messages().send(data);
