@@ -140,7 +140,12 @@ ${data.firstName} ${data.lastName}`;
         value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
         className="mb-6"
       />
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form
+        onSubmit={form.handleSubmit(onSubmit, (errors) => {
+          console.log("Validation errors:", errors);
+        })}
+        className="space-y-8"
+      >
         {step === 1 && (
           <>
             <FormField
@@ -273,7 +278,6 @@ ${data.firstName} ${data.lastName}`;
             </div>
           </>
         )}
-
         {step === 2 && (
           <>
             <div className="space-y-2">
@@ -385,7 +389,6 @@ ${data.firstName} ${data.lastName}`;
             </div>
           </>
         )}
-
         {step === 3 && (
           <>
             <div className="space-y-4">
@@ -462,7 +465,6 @@ ${data.firstName} ${data.lastName}`;
             </div>
           </>
         )}
-
         {step === 4 && (
           <>
             <div className="space-y-6">
@@ -527,6 +529,10 @@ ${data.firstName} ${data.lastName}`;
                 >
                   Submit Request
                 </Button>
+                <button onClick={() => onSubmit(form.getValues())}>
+                  {" "}
+                  Test
+                </button>
               </div>
             </div>
           </>

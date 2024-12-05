@@ -1,6 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 async function main() {
+  const existingOrg = await prisma.organisation.findUnique({
+    where: { slug: "openai" },
+  });
+
+  if (existingOrg) {
+    console.log("Organisation already exists:", existingOrg);
+    return;
+  }
   const openai = await prisma.organisation.create({
     data: {
       name: "OpenAI",

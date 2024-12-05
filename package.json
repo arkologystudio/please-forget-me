@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "db-seed": "tsc prisma/seed.ts && cat prisma/seed.js | node --input-type=\"commonjs\" && rm prisma/seed.js",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "prisma": {
-    "seed": "ts-node --esm prisma/seed.ts"
+    "seed": "npm run db-seed"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -53,7 +54,7 @@
     "postcss": "^8.4.49",
     "prisma": "^6.0.1",
     "tailwindcss": "^3.4.16",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
   }
 }
