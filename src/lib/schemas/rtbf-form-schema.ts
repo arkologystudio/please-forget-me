@@ -1,4 +1,6 @@
 import * as z from "zod"
+import { isValidPhoneNumber } from "react-phone-number-input"
+
 
 export const companies = [
   { id: "openai", label: "OpenAI (ChatGPT)", email: "privacy@openai.com" },
@@ -31,11 +33,16 @@ export const rtbfFormSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   country: z.string().min(2, "Please select a country"),
   email: z.string().email("Please enter a valid email"),
+  phone: z.string().refine(isValidPhoneNumber, { message: "Invalid phone number" }).optional(),
   evidence: z.object({
     openai: z.array(z.string().url()).optional(),
     anthropic: z.array(z.string().url()).optional(),
     meta: z.array(z.string().url()).optional(),
+    prompts: z.string().optional(),
+    urls: z.string().optional(),
   }),
+  authorization: z.boolean().refine(val => val === true, { message: "You must authorize the request" }),
+  signature: z.string().min(2, "Signature must be at least 2 characters"),
 })
 
 export type RTBFFormValues = z.infer<typeof rtbfFormSchema> 

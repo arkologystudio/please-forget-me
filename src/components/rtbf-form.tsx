@@ -18,8 +18,8 @@ import { companies, reasons, rtbfFormSchema, type RTBFFormValues } from "@/lib/s
 import { Progress } from "@/components/ui/progress"
 import CountrySelect from "@/components/ui/country-select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { InfoCircledIcon } from "@radix-ui/react-icons"
+import { PhoneInput } from "@/components/ui/phone-input"
 
 export function RTBFForm() {
   const [step, setStep] = useState(1)
@@ -37,7 +37,10 @@ export function RTBFForm() {
       lastName: "",
       email: "",
       country: "",
+      phone: "",
       evidence: {},
+      authorization: false,
+      signature: "",
     },
     mode: "onChange",
   })
@@ -79,7 +82,7 @@ export function RTBFForm() {
 
     return `Dear ${selectedCompanies.map(c => c?.label).join(", ")},
 
-I am writing to request the deletion of my personal data under Article 17 of the General Data Protection Regulation (GDPR).
+I am writing to request the deletion of personal data under Article 17 of the General Data Protection Regulation (GDPR) on behalf of ${data.firstName} ${data.lastName}.
 
 Personal Details:
 Name: ${data.firstName} ${data.lastName}
@@ -99,9 +102,15 @@ Best regards,
 ${data.firstName} ${data.lastName}`
   }
 
+  // Custom validation for step 1
+  const isStep1Valid = () => {
+    const values = form.getValues()
+    return values.companies.length > 0 && values.reasons.length > 0
+  }
+
   return (
     <Form {...form}>
-      <Progress value={((step-1) / TOTAL_STEPS) * 100} className="mb-6" />
+      <Progress value={((step-1) / (TOTAL_STEPS-1)) * 100} className="mb-6" />
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {step === 1 && (
           <>
@@ -194,7 +203,7 @@ ${data.firstName} ${data.lastName}`
               )}
             />
             <div className="flex space-x-2">
-              <Button type="button" onClick={nextStep} disabled={!form.formState.isValid}>Continue</Button>
+              <Button type="button" onClick={nextStep} disabled={!isStep1Valid()}>Continue</Button>
             </div>
           </>
         )}
@@ -202,8 +211,7 @@ ${data.firstName} ${data.lastName}`
         {step === 2 && (
           <>
             <div className="space-y-2">
-              <p>Let&apos;s ensure we provide enough details to improve the chance that {selectedCompanyNames} will honour your request.</p>
-              <p className="text-sm text-muted-foreground">Note: Your data is never stored on this website.</p>
+              <p>The following personal information is submitted to {selectedCompanyNames} in the Right to be Forgotten request.</p>
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
@@ -272,9 +280,29 @@ ${data.firstName} ${data.lastName}`
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number (Optional)</FormLabel>
+                  <FormControl>
+                    <PhoneInput placeholder="Enter your phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="flex space-x-2">
               <Button type="button" variant="outline" onClick={prevStep}>Back</Button>
-              <Button type="button" onClick={nextStep} disabled={!form.formState.isValid}>Continue</Button>
+              <Button 
+                type="button" 
+                onClick={nextStep} 
+                disabled={!form.getValues("firstName") || !form.getValues("lastName") || !form.getValues("email") || !form.getValues("country")}
+              >
+                Continue
+              </Button>
             </div>
           </>
         )}
@@ -283,24 +311,59 @@ ${data.firstName} ${data.lastName}`
           <>
             <div className="space-y-4">
               {form.watch("companies").includes("openai") && (
-                <FormField
-                  control={form.control}
-                  name="evidence.openai"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ChatGPT Chat Links (Optional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://chat.openai.com/..."
-                          onChange={(e) => field.onChange([...field.value || [], e.target.value])}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <>
+                  <FormField
+                    control={form.control}
+                    name="evidence.openai"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ChatGPT Chat Links (Optional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://chat.openai.com/..."
+                            onChange={(e) => field.onChange([...field.value || [], e.target.value])}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="evidence.prompts"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ChatGPT Prompts</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Tell me about yourself, What's my name, What do you know about me"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
               )}
-              {/* Similar blocks for Anthropic and Meta */}
+
+              <FormField
+                control={form.control}
+                name="evidence.urls"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL(s) containing the personal information (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://example.com/page-with-personal-info"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             
             <div className="flex space-x-2">
@@ -323,6 +386,40 @@ ${data.firstName} ${data.lastName}`
                 </pre>
               </div>
 
+              <FormField
+                control={form.control}
+                name="authorization"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        I represent that the information in this request is accurate and that I am authorized to submit it
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="signature"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Signature</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Type your full name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="flex space-x-2">
                 <Button type="button" variant="outline" onClick={prevStep}>
                   Back
@@ -330,6 +427,7 @@ ${data.firstName} ${data.lastName}`
                 <Button 
                   type="submit"
                   className="flex-1"
+                  disabled={!form.watch("authorization") || !form.watch("signature")}
                 >
                   Submit Request
                 </Button>
