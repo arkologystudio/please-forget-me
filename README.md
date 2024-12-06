@@ -60,6 +60,11 @@ exec app npx prisma migrate dev --name init
 
 Mailgun is a powerful email delivery service used for sending, receiving, and tracking emails via a simple API. This project integrates Mailgun to handle email communication efficiently, leveraging its robust infrastructure to ensure reliable and scalable email delivery. The implementation uses the Mailgun API to send messages, making it easy to manage transactional emails directly from the application.
 
+## UI Components & Icons
+
+- [ShadCN](https://ui.shadcn.com/)
+- [Radix UI](https://www.radix-ui.com/icons)
+
 ## Prisma
 
 Prisma is an ORM for Node.js and TypeScript that makes it easy to work with databases. It provides a type-safe way to interact with your database, making it easier to write and maintain your code.
