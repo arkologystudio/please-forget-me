@@ -1,5 +1,5 @@
 import formData from "form-data";
-import Mailgun from "mailgun.js";
+import Mailgun, { MailgunMessageData } from "mailgun.js";
 
 import { Organisation, User } from "@prisma/client";
 import { reasons, RTBFFormValues } from "@/lib/schemas/rtbf-form-schema";
@@ -8,8 +8,8 @@ const DOMAIN = process.env.MAILGUN_DOMAIN || "";
 const API_KEY = process.env.MAILGUN_API_KEY || "";
 const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
-const mailgun = new Mailgun(formData);
-const mg = mailgun.client({
+
+const mg = new Mailgun(formData).client({
   username: "api",
   key: API_KEY,
   url: "https://api.eu.mailgun.net",
@@ -60,7 +60,7 @@ ${data.firstName} ${data.lastName}`;
 export const sendInitialRequestEmail = async (
   recipient: Organisation,
   data: RTBFFormValues
-): Promise<mailgun.messages.SendResponse> => {
+) => {
   console.log("sendInitialRequestEmail called with arguments:", {
     recipient,
     data,
@@ -75,14 +75,14 @@ export const sendInitialRequestEmail = async (
   try {
     const emailContent = generateLetter(data, recipient);
 
-    const mailData: mailgun.messages.SendData = {
+    const mailData: MailgunMessageData = {
       from: `Citizen of the Internet <${FROM_EMAIL}>`,
       to: recipient.email.toString(),
       subject: "Right to be forgotten request",
       text: emailContent,
     };
 
-    const body = await mg.messages().send(mailData);
+    const body = await mg.messages.create(DOMAIN, mailData);
     console.log("Email sent:", body);
     return body;
   } catch (error) {
@@ -91,18 +91,16 @@ export const sendInitialRequestEmail = async (
   }
 };
 
-export const sendDeliveryConfirmationEmail = async (
-  recipient: User
-): Promise<mailgun.messages.SendResponse> => {
+export const sendDeliveryConfirmationEmail = async (recipient: User) => {
   try {
-    const data: mailgun.messages.SendData = {
+    const data: MailgunMessageData = {
       from: `Please Forget Me <${ORGANISATION_EMAIL}>`,
       to: recipient.email,
       subject: "Delivery Confirmation: Request to be forgotten",
       text: "This is an email to confirm that your request to be forgotten has been delivered to the relevant organisation.",
     };
 
-    const body = await mg.messages().send(data);
+    const body = await mg.messages.create(DOMAIN, data);
     console.log("Email sent:", body);
     return body;
   } catch (error) {

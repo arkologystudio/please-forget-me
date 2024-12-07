@@ -67,6 +67,9 @@ export default async function handler(
       // Prepare to send emails and create threads
       const emailPromises = organisations.map(async (org) => {
         const emailContent = await sendInitialRequestEmail(org, data);
+        if (!emailContent.message || !emailContent.id) {
+          throw new Error("Email content is undefined");
+        }
 
         const thread = await prisma.thread.create({
           data: {
