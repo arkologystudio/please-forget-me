@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-//@ts-ignore
+
 import countryRegionData from "country-region-data/dist/data-umd";
 import { useEffect, useState } from "react";
 
@@ -26,7 +26,7 @@ export const filterCountries = (
   whitelist: string[],
   blacklist: string[]
 ): CountryRegion[] => {
-  let countriesListedFirst: any[] = [];
+  const countriesListedFirst: CountryRegion[] = [];
   let filteredCountries = countries;
 
   if (whitelist.length > 0) {
@@ -67,7 +67,7 @@ export const filterRegions = (
   whitelist: string[],
   blacklist: string[]
 ) => {
-  let regionsListedFirst: any[] = [];
+  const regionsListedFirst: Region[] = [];
   let filteredRegions = regions;
 
   if (whitelist.length > 0) {
