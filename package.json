@@ -32,7 +32,7 @@
     "cmdk": "^1.0.0",
     "country-region-data": "^3.1.0",
     "lucide-react": "^0.465.0",
-    "mailgun.js": "^10.2.4",
+    "mailgun.js": "^10.2.4", 
     "next": "15.0.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -41,7 +41,9 @@
     "react-phone-number-input": "^3.4.10",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "raw-body": "^2.5.1",
+    "qs": "^6.11.0"
   },
   "devDependencies": {
     "@types/node": "^20",
