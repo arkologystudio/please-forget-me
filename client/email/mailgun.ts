@@ -1,4 +1,5 @@
-import mailgun from "mailgun-js";
+import formData from "form-data";
+import Mailgun from "mailgun.js";
 
 import { Organisation, User } from "@prisma/client";
 import { reasons, RTBFFormValues } from "@/lib/schemas/rtbf-form-schema";
@@ -7,10 +8,11 @@ const DOMAIN = process.env.MAILGUN_DOMAIN || "";
 const API_KEY = process.env.MAILGUN_API_KEY || "";
 const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
-const mg = mailgun({
-  apiKey: API_KEY,
-  domain: DOMAIN,
-  endpoint: "https://api.eu.mailgun.net",
+const mailgun = new Mailgun(formData);
+const mg = mailgun.client({
+  username: "api",
+  key: API_KEY,
+  url: "https://api.eu.mailgun.net",
 });
 
 // Helper function to generate the letter
