@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "db-seed": "tsc prisma/seed.ts && cat prisma/seed.js | node --input-type=\"commonjs\" && rm prisma/seed.js",
+    "db-seed": "tsc prisma/seed.ts && node prisma/seed.js && rm prisma/seed.js",
     "dev": "next dev",
-    "build": "next build",
-    "build-vercel": "npx prisma generate && next build npx prisma migrate deploy && npm run db-seed",
+    "build": "prisma migrate deploy && npx prisma generate && next build",
+    "build-vercel": "npm run build && next lint && npm run db-seed",
     "start": "next start",
     "lint": "next lint"
   },
