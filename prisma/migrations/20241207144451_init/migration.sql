@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "identifier" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "email" TEXT NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE "Organisation" (
 -- CreateTable
 CREATE TABLE "Thread" (
     "id" SERIAL NOT NULL,
-    "userId" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
     "organisationId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" TEXT NOT NULL,
@@ -35,15 +35,19 @@ CREATE TABLE "Email" (
     "threadId" INTEGER NOT NULL,
     "sender" TEXT NOT NULL,
     "content" TEXT NOT NULL,
-    "sentAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "sentAt" TIMESTAMP(3) NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "userId" INTEGER NOT NULL,
+    "mailgunId" TEXT NOT NULL,
 
     CONSTRAINT "Email_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "FormSubmission" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "data" JSONB NOT NULL,
     "threadId" INTEGER,
@@ -73,6 +77,9 @@ CREATE UNIQUE INDEX "Organisation_email_key" ON "Organisation"("email");
 -- CreateIndex
 CREATE UNIQUE INDEX "Organisation_slug_key" ON "Organisation"("slug");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Email_mailgunId_key" ON "Email"("mailgunId");
+
 -- AddForeignKey
 ALTER TABLE "Thread" ADD CONSTRAINT "Thread_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -81,6 +88,9 @@ ALTER TABLE "Thread" ADD CONSTRAINT "Thread_organisationId_fkey" FOREIGN KEY ("o
 
 -- AddForeignKey
 ALTER TABLE "Email" ADD CONSTRAINT "Email_threadId_fkey" FOREIGN KEY ("threadId") REFERENCES "Thread"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Email" ADD CONSTRAINT "Email_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "FormSubmission" ADD CONSTRAINT "FormSubmission_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

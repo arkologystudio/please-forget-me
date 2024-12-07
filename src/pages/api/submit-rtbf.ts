@@ -1,10 +1,7 @@
 import { RTBFFormValues } from "@/lib/schemas/rtbf-form-schema";
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
-import {
-  sendInitialRequestEmail,
-  sendDeliveryConfirmationEmail,
-} from "../../../client/email/mailgun";
+import { sendInitialRequestEmail } from "../../../client/email/mailgun";
 
 // Instantiate Prisma Client outside the handler to prevent multiple instances in serverless environments
 const prisma = new PrismaClient();
@@ -84,6 +81,10 @@ export default async function handler(
             threadId: thread.id,
             sender: "user",
             content: emailContent.message,
+            status: "pending",
+            userId: user.id,
+            mailgunId: emailContent.id,
+            sentAt: new Date(),
           },
         });
 
@@ -127,7 +128,7 @@ export default async function handler(
       throw new Error("User not found. Cannot send thread confirmation email.");
     }
 
-    await sendDeliveryConfirmationEmail(fetchedUser);
+    // await sendDeliveryConfirmationEmail(fetchedUser);
 
     res.status(200).json({ message: "Request submitted successfully" });
   } catch (error: Error | unknown) {
