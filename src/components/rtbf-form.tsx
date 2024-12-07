@@ -20,6 +20,7 @@ import CountrySelect from "@/components/ui/country-select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { InfoCircledIcon } from "@radix-ui/react-icons"
 import { PhoneInput } from "@/components/ui/phone-input"
+import { generateLetter } from "@/lib/schemas/rtbf-letter-template"
 
 export function RTBFForm() {
   const [step, setStep] = useState(1)
@@ -37,7 +38,8 @@ export function RTBFForm() {
       lastName: "",
       email: "",
       country: "",
-      phone: "",
+    //   phone: "",
+      birthDate: "",
       evidence: {},
       authorization: false,
       signature: "",
@@ -69,38 +71,6 @@ export function RTBFForm() {
   const selectedCompanyNames = form.watch("companies").map(
     id => companies.find(c => c.id === id)?.label
   ).join(", ")
-
-  // Helper function to generate the letter
-  function generateLetter(data: RTBFFormValues) {
-    const selectedCompanies = data.companies.map(id => 
-      companies.find(c => c.id === id)
-    ).filter(Boolean)
-    
-    const selectedReasons = data.reasons.map(id =>
-      reasons.find(r => r.id === id)
-    ).filter(Boolean)
-
-    return `Dear ${selectedCompanies.map(c => c?.label).join(", ")},
-
-I am writing to request the deletion of personal data under Article 17 of the General Data Protection Regulation (GDPR) on behalf of ${data.firstName} ${data.lastName}.
-
-Personal Details:
-Name: ${data.firstName} ${data.lastName}
-Email: ${data.email}
-Country: ${data.country}
-
-Reasons for Deletion:
-${selectedReasons.map(r => `- ${r?.label}`).join("\n")}
-
-${data.evidence.openai?.length ? `\nChatGPT Evidence Links:\n${data.evidence.openai.join("\n")}` : ""}
-${data.evidence.anthropic?.length ? `\nClaude Evidence Links:\n${data.evidence.anthropic.join("\n")}` : ""}
-${data.evidence.meta?.length ? `\nLLama Evidence Links:\n${data.evidence.meta.join("\n")}` : ""}
-
-I look forward to receiving confirmation that you have complied with my request.
-
-Best regards,
-${data.firstName} ${data.lastName}`
-  }
 
   // Custom validation for step 1
   const isStep1Valid = () => {
@@ -246,7 +216,23 @@ ${data.firstName} ${data.lastName}`
               />
             </div>
 
+
             <FormField
+              control={form.control}
+              name="email"
+              rules={{ required: "Email is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="email" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+<FormField
               control={form.control}
               name="country"
               rules={{ required: "Country is required" }}
@@ -267,20 +253,20 @@ ${data.firstName} ${data.lastName}`
 
             <FormField
               control={form.control}
-              name="email"
-              rules={{ required: "Email is required" }}
+              name="birthDate"
+              rules={{ required: "Date of birth is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Date of Birth</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" />
+                    <Input {...field} type="date" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="phone"
               render={({ field }) => (
@@ -292,14 +278,21 @@ ${data.firstName} ${data.lastName}`
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             <div className="flex space-x-2">
               <Button type="button" variant="outline" onClick={prevStep}>Back</Button>
               <Button 
                 type="button" 
                 onClick={nextStep} 
-                disabled={!form.getValues("firstName") || !form.getValues("lastName") || !form.getValues("email") || !form.getValues("country")}
+                disabled={
+                  !form.getValues("firstName") || 
+                  !form.getValues("lastName") || 
+                  !form.getValues("email") || 
+                  !form.getValues("country") ||
+                  !form.getValues("birthDate") ||
+                  !form.formState.isValid
+                }
               >
                 Continue
               </Button>
@@ -399,7 +392,10 @@ ${data.firstName} ${data.lastName}`
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>
-                        I represent that the information in this request is accurate and that I am authorized to submit it
+                        I confirm that I am the individual whose data this request concerns (the data subject) and I authorize Please Forget Me to submit this request on my behalf.
+                      </FormLabel>
+                      <FormLabel>
+                        I confirm I have read and understood my rights under GDPR Article 17, and I am requesting the erasure of my personal data.
                       </FormLabel>
                     </div>
                   </FormItem>
