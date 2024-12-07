@@ -6,7 +6,7 @@
     "db-seed": "tsc prisma/seed.ts && cat prisma/seed.js | node --input-type=\"commonjs\" && rm prisma/seed.js",
     "dev": "next dev",
     "build": "next build",
-    "build-vercel": "next build && next lint && npm run db-seed && prisma generate",
+    "build-vercel": "npx risma generate &&next build && npm run db-seed",
     "start": "next start",
     "lint": "next lint"
   },
