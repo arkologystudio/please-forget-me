@@ -5,15 +5,8 @@ import { Organisation, User } from "@prisma/client";
 import { reasons, RTBFFormValues } from "@/lib/schemas/rtbf-form-schema";
 
 const DOMAIN = process.env.MAILGUN_DOMAIN || "";
-const API_KEY = process.env.MAILGUN_API_KEY || "";
 const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
-
-const mg = new Mailgun(formData).client({
-  username: "api",
-  key: API_KEY,
-  url: "https://api.mailgun.net",
-});
 
 // Helper function to generate the letter
 function generateLetter(data: RTBFFormValues, organisation: Organisation) {
@@ -61,6 +54,7 @@ export const sendInitialRequestEmail = async (
   recipient: Organisation,
   data: RTBFFormValues
 ) => {
+  const mg = createMailgunClient();
   console.log("sendInitialRequestEmail called with arguments:", {
     recipient,
     data,
@@ -69,7 +63,6 @@ export const sendInitialRequestEmail = async (
   console.log("Environment variables:", {
     FROM_EMAIL,
     ORGANISATION_EMAIL,
-    API_KEY: API_KEY ? "set" : "not set",
     DOMAIN: DOMAIN ? "set" : "not set",
   });
   try {
@@ -95,6 +88,7 @@ export const sendInitialRequestEmail = async (
 
 export const sendDeliveryConfirmationEmail = async (recipient: User) => {
   try {
+    const mg = createMailgunClient();
     const data: MailgunMessageData = {
       from: `Please Forget Me <${ORGANISATION_EMAIL}>`,
       to: recipient.email,
@@ -107,6 +101,23 @@ export const sendDeliveryConfirmationEmail = async (recipient: User) => {
     return body;
   } catch (error) {
     console.error("Error sending thread confirmation email:", error);
+    throw error;
+  }
+};
+
+const createMailgunClient = () => {
+  try {
+    if (!process.env.MAILGUN_API_KEY) {
+      throw new Error("MAILGUN_API_KEY is not set");
+    }
+    const mailgun = new Mailgun(formData);
+    const mg = mailgun.client({
+      username: "api",
+      key: process.env.MAILGUN_API_KEY,
+    });
+    return mg;
+  } catch (error) {
+    console.error("Error creating mailgun client:", error);
     throw error;
   }
 };
