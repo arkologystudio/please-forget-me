@@ -82,6 +82,8 @@ export const sendInitialRequestEmail = async (
       text: emailContent,
     };
 
+    console.log("mailData:", mailData, DOMAIN);
+
     const body = await mg.messages.create(DOMAIN, mailData);
     console.log("Email sent:", body);
     return body;
