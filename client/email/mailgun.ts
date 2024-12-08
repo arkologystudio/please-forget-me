@@ -12,7 +12,7 @@ const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a n
 const mg = new Mailgun(formData).client({
   username: "api",
   key: API_KEY,
-  url: "https://api.eu.mailgun.net",
+  url: "https://api.mailgun.net",
 });
 
 // Helper function to generate the letter
