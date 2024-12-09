@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -29,8 +29,8 @@ export function RTBFForm() {
   const [letterIndex, setLetterIndex] = useState(0)
   const [isSignatureConfirmed, setIsSignatureConfirmed] = useState(false)
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, TOTAL_STEPS))
-  const prevStep = () => setStep((prev) => Math.max(prev - 1, 0))
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
+  const prevStep = () => setStep((prev) => Math.max(prev - 1, 0));
 
   const form = useForm<RTBFFormValues>({
     resolver: zodResolver(rtbfFormSchema),
@@ -52,9 +52,10 @@ export function RTBFForm() {
       signature: "",
     },
     mode: "onChange",
-  })
+  });
 
   async function onSubmit(data: RTBFFormValues) {
+    console.log("Attempting to submit form data:", data);
     try {
       const letters = generateLetters(data)
 
@@ -77,8 +78,7 @@ export function RTBFForm() {
       
       // Handle success (e.g., show success message, redirect)
     } catch (error) {
-      // Handle error (e.g., show error message)
-      console.error('Error submitting form:', error)
+      console.error("Error submitting form:", error);
     }
   }
 
@@ -133,8 +133,16 @@ export function RTBFForm() {
 
   return (
     <Form {...form}>
-      <Progress value={((step-1) / (TOTAL_STEPS-1)) * 100} className="mb-6" />
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <Progress
+        value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
+        className="mb-6"
+      />
+      <form
+        onSubmit={form.handleSubmit(onSubmit, (errors) => {
+          console.log("Validation errors:", errors);
+        })}
+        className="space-y-8"
+      >
         {step === 1 && (
           <>
             <FormField
@@ -231,7 +239,13 @@ export function RTBFForm() {
               )}
             />
             <div className="flex space-x-2">
-              <Button type="button" onClick={nextStep} disabled={!isStep1Valid()}>Continue</Button>
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={!isStep1Valid()}
+              >
+                Continue
+              </Button>
             </div>
           </>
         )}
@@ -359,9 +373,12 @@ export function RTBFForm() {
         {step === 3 && (
           <>
             <div className="space-y-2">
-              <p>The following personal information is submitted to {selectedCompanyNames} in the Right to be Forgotten request.</p>
+              <p>
+                The following personal information is submitted to{" "}
+                {selectedCompanyNames} in the Right to be Forgotten request.
+              </p>
             </div>
-            
+
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -451,7 +468,10 @@ export function RTBFForm() {
                 <FormItem>
                   <FormLabel>Phone Number (Optional)</FormLabel>
                   <FormControl>
-                    <PhoneInput placeholder="Enter your phone number" {...field} />
+                    <PhoneInput
+                      placeholder="Enter your phone number"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -534,7 +554,7 @@ export function RTBFForm() {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>
-                        I confirm that I am the individual whose data this request concerns and I authorize <i>Please Forget Me</i> to submit this request on my behalf. Additionally, I have read and understood my rights under <a href="https://gdpr-info.eu/art-17-gdpr/">GDPR Article 17</a>, and I am requesting the erasure of my personal data.
+                        I represent that the information in this request is accurate and that I am authorized to submit it
                       </FormLabel>
                     </div>
                   </FormItem>
@@ -570,18 +590,22 @@ export function RTBFForm() {
                 <Button type="button" variant="outline" onClick={prevStep}>
                   Back
                 </Button>
-                <Button 
+                <Button
                   type="submit"
                   className="flex-1"
-                  disabled={!isStep4Valid()}
+                  disabled={!form.watch("authorization") || !form.watch("signature")}
                 >
                   Submit Request
                 </Button>
+                <button onClick={() => onSubmit(form.getValues())}>
+                  {" "}
+                  Test
+                </button>
               </div>
             </div>
           </>
         )}
       </form>
     </Form>
-  )
-} 
+  );
+}
