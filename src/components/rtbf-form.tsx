@@ -20,7 +20,7 @@ import CountrySelect from "@/components/ui/country-select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { InfoCircledIcon } from "@radix-ui/react-icons"
 import { PhoneInput } from "@/components/ui/phone-input"
-import { generateLetter } from "@/lib/schemas/rtbf-letter-template"
+import { generateLetters, generatePreviewLetter } from "@/lib/schemas/rtbf-letter-template"
 
 export function RTBFForm() {
   const [step, setStep] = useState(1)
@@ -38,9 +38,13 @@ export function RTBFForm() {
       lastName: "",
       email: "",
       country: "",
-    //   phone: "",
       birthDate: "",
-      evidence: {},
+      prompts: [],
+      evidence: {
+        openai: { chatLinks: [] },
+        anthropic: { chatLinks: [] },
+        meta: { chatLinks: [] }
+      },
       authorization: false,
       signature: "",
     },
@@ -49,12 +53,17 @@ export function RTBFForm() {
 
   async function onSubmit(data: RTBFFormValues) {
     try {
+      const letters = generateLetters(data)
+      
       const response = await fetch('/api/submit-rtbf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          formData: data,
+          letters
+        }),
       })
       
       if (!response.ok) {
@@ -90,85 +99,90 @@ export function RTBFForm() {
               rules={{ required: "Please select at least one company" }}
               render={() => (
                 <FormItem>
+                  
+                  <div className="space-y-4">
                   <FormLabel>Dear,</FormLabel>
-                  <div className="space-y-2">
-                    {companies.map((company) => (
-                      <FormField
-                        key={company.id}
-                        control={form.control}
-                        name="companies"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-3">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(company.id)}
-                                onCheckedChange={(checked) => {
-                                  const value = field.value || []
-                                  return checked
-                                    ? field.onChange([...value, company.id])
-                                    : field.onChange(value.filter((val) => val !== company.id))
-                                }}
-                                disabled={company.id === "anthropic" || company.id === "meta"}
+                    <div className="space-y-2">
+                      {companies.map((company) => (
+                        <FormField
+                          key={company.id}
+                          control={form.control}
+                          name="companies"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(company.id)}
+                                  onCheckedChange={(checked) => {
+                                    const value = field.value || []
+                                    return checked
+                                      ? field.onChange([...value, company.id])
+                                      : field.onChange(value.filter((val) => val !== company.id))
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className={""}>
+                                {company.label}
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <p>I'd like to be forgotten.</p>
+                    
+                    <div className="space-y-4">
+                    <p>Please remove my personal data from your systems, for the following reasons:</p>
+                    <FormField
+                      control={form.control}
+                      name="reasons"
+                      rules={{ required: "Please select at least one reason" }}
+                      render={() => (
+                        <FormItem>
+                          <div className="space-y-2">
+                            {reasons.map((reason) => (
+                              <FormField
+                                key={reason.id}
+                                control={form.control}
+                                name="reasons"
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center space-x-3">
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(reason.id)}
+                                        onCheckedChange={(checked) => {
+                                          const value = field.value || []
+                                          return checked
+                                            ? field.onChange([...value, reason.id])
+                                            : field.onChange(value.filter((val) => val !== reason.id))
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <div className="flex items-center space-x-2">
+                                      <FormLabel className="text-sm">{reason.label}</FormLabel>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger>
+                                            <InfoCircledIcon className="h-4 w-4 text-muted-foreground" />
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="w-80 text-sm">{reason.tooltip}</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                  </FormItem>
+                                )}
                               />
-                            </FormControl>
-                            <FormLabel className={company.id === "anthropic" || company.id === "meta" ? "text-gray-500" : ""}>
-                              {company.label} {company.id === "anthropic" || company.id === "meta" ? "(Coming Soon)" : ""}
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-              <p>I'd like to be forgotten, for the following reasons:</p>
-            </div>
-            <FormField
-              control={form.control}
-              name="reasons"
-              rules={{ required: "Please select at least one reason" }}
-              render={() => (
-                <FormItem>
-                  <div className="space-y-2">
-                    {reasons.map((reason) => (
-                      <FormField
-                        key={reason.id}
-                        control={form.control}
-                        name="reasons"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-3">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(reason.id)}
-                                onCheckedChange={(checked) => {
-                                  const value = field.value || []
-                                  return checked
-                                    ? field.onChange([...value, reason.id])
-                                    : field.onChange(value.filter((val) => val !== reason.id))
-                                }}
-                              />
-                            </FormControl>
-                            <div className="flex items-center space-x-2">
-                              <FormLabel className="text-sm">{reason.label}</FormLabel>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <InfoCircledIcon className="h-4 w-4 text-muted-foreground" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="w-80 text-sm">{reason.tooltip}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    </div>
                   </div>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
                 </FormItem>
               )}
             />
@@ -178,7 +192,123 @@ export function RTBFForm() {
           </>
         )}
 
-        {step === 2 && (
+{step === 2 && (
+          <>
+            <div className="space-y-4 border-b pb-4 mb-6">
+              <h3 className="font-medium">AI Interaction Details</h3>
+              <FormField
+                control={form.control}
+                name="prompts"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prompts Used (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter prompts that reveal your personal data (e.g., 'Tell me about <your full name>', 'Where does <full name> live?')"
+                        value={field.value?.[field.value.length - 1] || ''}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          field.onChange(newValue ? [newValue] : []);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-4">
+              {form.watch("companies").map((companyId) => {
+                const company = companies.find(c => c.id === companyId)
+                if (!company) return null
+
+                return (
+                  <div key={companyId} className="space-y-4 border-b pb-4 last:border-b-0">
+                    <h3 className="font-medium"><b>{company.label} Evidence</b></h3>
+                    
+                    {company.evidenceFields.chatLinks && (
+                      <FormField
+                        control={form.control}
+                        name={`evidence.${companyId}.chatLinks`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{company.evidenceFields.chatLinks.label}</FormLabel>
+                            <div className="space-y-2">
+                              {(!field.value?.length ? [''] : field.value).map((link, index) => (
+                                <div key={index} className="flex gap-2">
+                                  <FormControl>
+                                    <Input 
+                                      placeholder={company.evidenceFields.chatLinks?.placeholder}
+                                      value={link}
+                                      onChange={(e) => {
+                                        const newLinks = [...(field.value || [])];
+                                        newLinks[index] = e.target.value;
+                                        field.onChange(newLinks.filter(Boolean));
+                                      }}
+                                    />
+                                  </FormControl>
+                                  {(field.value || []).length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      onClick={() => {
+                                        const newLinks = field.value?.filter((_, i) => i !== index) || [];
+                                        field.onChange(newLinks);
+                                      }}
+                                    >
+                                      ✕
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  field.onChange([...(field.value || []), '']);
+                                }}
+                              >
+                                Add Another Link
+                              </Button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name={`evidence.${companyId}.additionalNotes`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Additional Notes (Optional)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Any additional context or information..."
+                              value={field.value || ''} 
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+            
+            <div className="flex space-x-2">
+              <Button type="button" variant="outline" onClick={prevStep}>Back</Button>
+              <Button type="button" onClick={nextStep}>Continue</Button>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
           <>
             <div className="space-y-2">
               <p>The following personal information is submitted to {selectedCompanyNames} in the Right to be Forgotten request.</p>
@@ -290,8 +420,7 @@ export function RTBFForm() {
                   !form.getValues("lastName") || 
                   !form.getValues("email") || 
                   !form.getValues("country") ||
-                  !form.getValues("birthDate") ||
-                  !form.formState.isValid
+                  !form.getValues("birthDate")
                 }
               >
                 Continue
@@ -300,71 +429,7 @@ export function RTBFForm() {
           </>
         )}
 
-        {step === 3 && (
-          <>
-            <div className="space-y-4">
-              {form.watch("companies").includes("openai") && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="evidence.openai"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ChatGPT Chat Links (Optional)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="https://chat.openai.com/..."
-                            onChange={(e) => field.onChange([...field.value || [], e.target.value])}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="evidence.prompts"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ChatGPT Prompts</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Tell me about yourself, What's my name, What do you know about me"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
-
-              <FormField
-                control={form.control}
-                name="evidence.urls"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL(s) containing the personal information (Optional)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="https://example.com/page-with-personal-info"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button type="button" variant="outline" onClick={prevStep}>Back</Button>
-              <Button type="button" onClick={nextStep}>Continue</Button>
-            </div>
-          </>
-        )}
+        
 
         {step === 4 && (
           <>
@@ -375,7 +440,7 @@ export function RTBFForm() {
 
               <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
                 <pre className="whitespace-pre-wrap font-sans">
-                  {generateLetter(form.getValues())}
+                  {generatePreviewLetter(form.getValues())}
                 </pre>
               </div>
 

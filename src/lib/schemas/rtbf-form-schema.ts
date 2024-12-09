@@ -1,11 +1,59 @@
 import * as z from "zod"
 import { isValidPhoneNumber } from "react-phone-number-input"
 
+type EvidenceField = {
+  label: string
+  placeholder: string
+  required: boolean
+}
+
+export type Company = {
+  id: string
+  label: string
+  email: string
+  evidenceFields: {
+    chatLinks?: EvidenceField
+  }
+}
+
 
 export const companies = [
-  { id: "openai", label: "OpenAI (ChatGPT)", email: "privacy@openai.com" },
-  { id: "anthropic", label: "Anthropic (Claude)", email: "-" },
-  { id: "meta", label: "Meta (LLama)", email: "-" },
+  { 
+    id: "openai", 
+    label: "OpenAI (ChatGPT)", 
+    email: "privacy@openai.com",
+    evidenceFields: {
+      chatLinks: {
+        label: "ChatGPT Chat Links",
+        placeholder: "https://chat.openai.com/...",
+        required: false
+      }
+    }
+  },
+  { 
+    id: "anthropic", 
+    label: "Anthropic (Claude)", 
+    email: "-",
+    evidenceFields: {
+      chatLinks: {
+        label: "Claude Chat Links",
+        placeholder: "https://claude.ai/...",
+        required: false
+      }
+    }
+  },
+  { 
+    id: "meta", 
+    label: "Meta (LLama)", 
+    email: "-",
+    evidenceFields: {
+      chatLinks: {
+        label: "LLama Chat Links",
+        placeholder: "https://...",
+        required: false
+      }
+    }
+  },
 ] as const
 
 export const reasons = [
@@ -25,6 +73,29 @@ export const reasons = [
     tooltip: "Under GDPR Article 17, you have the right to erasure if your personal data is inaccurate or misrepresents you. This ensures that AI systems don't perpetuate or learn from incorrect information about you."
   },
 ] as const
+
+// Update the evidence schema to separate prompts
+const evidenceSchema = z.object({
+  chatLinks: z.array(
+    z.string()
+      .min(1, "Please enter a chat link URL")
+      .refine(
+        (url) => {
+          if (!url) return true; // Allow empty strings
+          try {
+            new URL(url);
+            return true;
+          } catch {
+            return "Please enter a valid URL starting with http:// or https://";
+          }
+        },
+        {
+          message: "Please enter a valid URL starting with http:// or https://"
+        }
+      )
+  ).optional(),
+  additionalNotes: z.string().optional(),
+})
 
 export const rtbfFormSchema = z.object({
   companies: z.array(z.string()).min(1, "Please select at least one company"),
@@ -46,23 +117,12 @@ export const rtbfFormSchema = z.object({
         : age;
       
       return currentAge >= 18;
-    }, "You must be at least 18 years old to submit this request. If you are under 18, please have a parent or legal guardian submit this request on your behalf."),
+    }, "You must be at least 18 years old to submit this request."),
   country: z.string().min(2, "Please select a country"),
   email: z.string().email("Please enter a valid email"),
-  // phone: z.union([
-  //   z.string().length(0),  // empty string is valid
-  //   z.string().refine(
-  //     (val) => isValidPhoneNumber(val),
-  //     { message: "Invalid phone number" }
-  //   ),
-  // ]).optional(), 
-  evidence: z.object({
-    openai: z.array(z.string().url()).optional(),
-    anthropic: z.array(z.string().url()).optional(),
-    meta: z.array(z.string().url()).optional(),
-    prompts: z.string().optional(),
-    urls: z.string().optional(),
-  }),
+  // Common field for all LLM interactions
+  prompts: z.array(z.string()).optional(),
+  evidence: z.record(z.string(), evidenceSchema),
   authorization: z.boolean().refine(val => val === true, { message: "You must authorize the request" }),
   signature: z.string().min(2, "Signature must be at least 2 characters"),
 })

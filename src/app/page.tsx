@@ -25,7 +25,7 @@ export default function Home() {
             </p>
 
             <p className="text-lg leading-relaxed">
-              This tool helps you exercise your Right to be Forgotten with major <a href="#" className="text-blue-600 hover:text-blue-800 underline">AI companies</a>. Whether your data was processed without consent, contains inaccuracies, or you're concerned about its impact on your privacy, you can request its removal. Companies must respond to your request within 30 days.
+              This tool helps you exercise your Right to be Forgotten with major AI companies. Whether your data was processed without consent, contains inaccuracies, or you're concerned about its impact on your privacy, you can request its removal. Companies must respond to your request within 30 days.
             </p>
 
             <p className="text-lg leading-relaxed">
