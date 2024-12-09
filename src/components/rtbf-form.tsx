@@ -174,7 +174,7 @@ export function RTBFForm() {
                         />
                       ))}
                     </div>
-                    <p>I'd like to be forgotten.</p>
+                    <p>I&apos;d like to be forgotten.</p>
 
                     <div className="space-y-4">
                       <p>

@@ -26,11 +26,11 @@ export default function Home() {
             </p>
 
             <p className="text-lg leading-relaxed">
-              <i>Please Forget Me</i> helps you exercise your Right to be Forgotten with major AI companies by assisting with request creation and submission. Whether your data was processed without consent, contains inaccuracies, or you're concerned about its impact on your privacy, you can request its removal. Companies must respond to your request within 30 days.
+              <i>Please Forget Me</i> helps you exercise your Right to be Forgotten with major AI companies by assisting with request creation and submission. Whether your data was processed without consent, contains inaccuracies, or you&apos;re concerned about its impact on your privacy, you can request its removal. Companies must respond to your request within 30 days.
             </p>
 
             <p className="text-lg leading-relaxed">
-              Note: While the <i>Right to be Forgotten</i> is a fundamental right under GDPR, companies may have legitimate grounds to retain certain data. <a href="#" className="text-blue-600 hover:text-blue-800 underline">Learn more about exceptions and limitations here</a>.
+              Note: While the <i>Right to be Forgotten</i> is a fundamental right under GDPR, companies may have legitimate grounds to retain certain data. <a href="https://gdpr-info.eu/art-17-gdpr/" className="text-blue-600 hover:text-blue-800 underline">Learn more about exceptions and limitations here</a>.
             </p>
           </div>
         </div>
