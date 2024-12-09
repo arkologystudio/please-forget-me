@@ -30,7 +30,7 @@ export default function Home() {
             </p>
 
             <p className="text-lg leading-relaxed">
-              Note: While the Right to be Forgotten is a fundamental right under GDPR, companies may have legitimate grounds to retain certain data. <a href="#" className="text-blue-600 hover:text-blue-800 underline">Learn more about exceptions and limitations here</a>.
+              Note: While the <i>Right to be Forgotten</i> is a fundamental right under GDPR, companies may have legitimate grounds to retain certain data. <a href="#" className="text-blue-600 hover:text-blue-800 underline">Learn more about exceptions and limitations here</a>.
             </p>
           </div>
         </div>
