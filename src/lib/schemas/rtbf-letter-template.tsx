@@ -14,9 +14,15 @@ function generateCompanyLetter(
 ): LetterOutput {
   const companyEvidence = data.evidence[company.id]
   
+  const signatureHtml = data.signature ? 
+    `\n<img src="${data.signature}" alt="Signature" style="max-width: 400px; height: auto;" />\n` : 
+    '[No signature provided]'
+
   const body = `Dear ${company.label},
 
 I am writing to request the deletion of personal data under Article 17 of the General Data Protection Regulation (GDPR).
+
+I confirm that I am the individual whose data this request concerns and I authorize Please Forget Me to submit this request on my behalf. I confirm I have read and understood my rights under GDPR Article 17, and I am requesting the erasure of my personal data.
 
 Personal Details:
 Name: ${data.firstName} ${data.lastName}
@@ -33,15 +39,15 @@ Evidence:
 ${companyEvidence?.chatLinks?.length ? `\nChat Links:\n${companyEvidence.chatLinks.join("\n")}` : ""}
 ${companyEvidence?.additionalNotes ? `\nAdditional Context:\n${companyEvidence.additionalNotes}` : ""}
 
-I look forward to receiving confirmation that you have complied with my request within one month, as required by Article 12(3) GDPR.
+I look forward to receiving confirmation of this request, and a follow up that you have complied with my request within one month, as required by Article 12(3) GDPR.
 
 Best regards,
 ${data.firstName} ${data.lastName}
-${data.signature}`
+${signatureHtml}`
 
   return {
     to: company.email,
-    subject: `GDPR Article 17 - Right to Erasure Request - ${data.firstName} ${data.lastName}`,
+    subject: `Right to Erasure Request (${data.firstName} ${data.lastName}) - GDPR Article 17 `,
     body
   }
 }
@@ -64,14 +70,16 @@ export function generateLetters(data: RTBFFormValues): LetterOutput[] {
 export function generatePreviewLetter(data: RTBFFormValues, index: number = 0): {
   body: string,
   currentIndex: number,
-  total: number
+  total: number,
+  isHtml: boolean
 } {
   const letters = generateLetters(data)
   
   if (letters.length === 0) return { 
     body: "No companies selected", 
     currentIndex: 0, 
-    total: 0 
+    total: 0,
+    isHtml: false
   }
 
   // Ensure index is within bounds
@@ -81,6 +89,7 @@ export function generatePreviewLetter(data: RTBFFormValues, index: number = 0): 
   return {
     body: `To: ${letter.to}\nSubject: ${letter.subject}\n\n${letter.body}`,
     currentIndex: safeIndex,
-    total: letters.length
+    total: letters.length,
+    isHtml: true
   }
 }

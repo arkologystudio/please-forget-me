@@ -21,11 +21,11 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto space-y-6 text-slate-700">
             <p className="text-lg leading-relaxed">
-              In today's AI-driven world, your personal data is being used to train <a href="#" className="text-blue-600 hover:text-blue-800 underline">large language models</a> and other AI systems. Under the <a href="#" className="text-blue-600 hover:text-blue-800 underline">GDPR's Right to be Forgotten (Article 17)</a>, you have the legal right to request the deletion of your personal data from these systems.
+              In today's AI-driven world, your personal data is being used to train <a href="#" className="text-blue-600 hover:text-blue-800 underline">large language models</a> and other AI systems. Under the <a href="https://gdpr-info.eu/art-17-gdpr/" className="text-blue-600 hover:text-blue-800 underline">GDPR's Right to be Forgotten (Article 17)</a>, you have the legal right to request the deletion of your personal data from these systems.
             </p>
 
             <p className="text-lg leading-relaxed">
-              This tool helps you exercise your Right to be Forgotten with major AI companies. Whether your data was processed without consent, contains inaccuracies, or you're concerned about its impact on your privacy, you can request its removal. Companies must respond to your request within 30 days.
+              <i>Please Forget Me</i> helps you exercise your Right to be Forgotten with major AI companies by assisting with request creation and submission. Whether your data was processed without consent, contains inaccuracies, or you're concerned about its impact on your privacy, you can request its removal. Companies must respond to your request within 30 days.
             </p>
 
             <p className="text-lg leading-relaxed">

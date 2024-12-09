@@ -21,11 +21,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { InfoCircledIcon } from "@radix-ui/react-icons"
 import { PhoneInput } from "@/components/ui/phone-input"
 import { generateLetters, generatePreviewLetter } from "@/lib/schemas/rtbf-letter-template"
+import { SignatureCanvas } from "@/components/ui/signature-pad"
 
 export function RTBFForm() {
   const [step, setStep] = useState(1)
   const TOTAL_STEPS = 4
   const [letterIndex, setLetterIndex] = useState(0)
+  const [isSignatureConfirmed, setIsSignatureConfirmed] = useState(false)
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, TOTAL_STEPS))
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 0))
@@ -88,6 +90,45 @@ export function RTBFForm() {
   const isStep1Valid = () => {
     const values = form.getValues()
     return values.companies.length > 0 && values.reasons.length > 0
+  }
+
+  // Add this validation function near isStep1Valid()
+  const isStep2Valid = () => {
+    const values = form.getValues();
+    const selectedCompanies = values.companies;
+    
+    // Check if at least one prompt is provided
+    if (!values.prompts?.length) return false;
+    
+    // Check if each selected company has at least one chat link
+    // for (const companyId of selectedCompanies) {
+    //   const companyEvidence = values.evidence[companyId];
+    //   if (companyEvidence?.chatLinks?.length === 0) return false;
+    // }
+    
+    return true;
+  }
+
+  // Add this validation function near the other validation functions
+  const isStep3Valid = () => {
+    const values = form.getValues();
+    return !!(
+      values.firstName?.trim() && 
+      values.lastName?.trim() && 
+      values.email?.trim() && 
+      values.country?.trim() &&
+      values.birthDate?.trim()
+    );
+  }
+
+  // Add this validation function
+  const isStep4Valid = () => {
+    const values = form.getValues();
+    return !!(
+      values.authorization && 
+      values.signature && 
+      isSignatureConfirmed
+    );
   }
 
   return (
@@ -202,17 +243,20 @@ export function RTBFForm() {
               <FormField
                 control={form.control}
                 name="prompts"
+                rules={{ required: "At least one prompt is required" }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prompts Used (Optional)</FormLabel>
+                    <FormLabel htmlFor="prompts">Prompts Used</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Enter prompts that reveal your personal data (e.g., 'Tell me about <your full name>', 'Where does <full name> live?')"
+                        id="prompts"
+                        placeholder="Prompts that reveal your personal data (e.g., 'Where does <full name> live?')"
                         value={field.value?.[field.value.length - 1] || ''}
                         onChange={(e) => {
                           const newValue = e.target.value;
                           field.onChange(newValue ? [newValue] : []);
                         }}
+                        required
                       />
                     </FormControl>
                     <FormMessage />
@@ -236,18 +280,19 @@ export function RTBFForm() {
                         name={`evidence.${companyId}.chatLinks`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{company.evidenceFields.chatLinks.label}</FormLabel>
+                            <FormLabel htmlFor={`${company.id}-chatlinks`}>{company.evidenceFields.chatLinks.label}</FormLabel>
                             <div className="space-y-2">
                               {(!field.value?.length ? [''] : field.value).map((link, index) => (
                                 <div key={index} className="flex gap-2">
                                   <FormControl>
                                     <Input 
+                                      id={`${company.id}-chatlinks-${index}`}
                                       placeholder={company.evidenceFields.chatLinks?.placeholder}
                                       value={link}
                                       onChange={(e) => {
                                         const newLinks = [...(field.value || [])];
                                         newLinks[index] = e.target.value;
-                                        field.onChange(newLinks.filter(Boolean));
+                                        field.onChange(newLinks);
                                       }}
                                     />
                                   </FormControl>
@@ -276,7 +321,6 @@ export function RTBFForm() {
                                 Add Another Link
                               </Button>
                             </div>
-                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -287,9 +331,10 @@ export function RTBFForm() {
                       name={`evidence.${companyId}.additionalNotes`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Additional Notes (Optional)</FormLabel>
+                          <FormLabel htmlFor={`${company.id}-additional-notes`}>Additional Notes (Optional)</FormLabel>
                           <FormControl>
                             <Input 
+                              id={`${company.id}-additional-notes`}
                               placeholder="Any additional context or information..."
                               value={field.value || ''} 
                               onChange={field.onChange}
@@ -306,7 +351,7 @@ export function RTBFForm() {
             
             <div className="flex space-x-2">
               <Button type="button" variant="outline" onClick={prevStep}>Back</Button>
-              <Button type="button" onClick={nextStep}>Continue</Button>
+              <Button type="button" onClick={nextStep} disabled={!isStep2Valid()}>Continue</Button>
             </div>
           </>
         )}
@@ -418,13 +463,7 @@ export function RTBFForm() {
               <Button 
                 type="button" 
                 onClick={nextStep} 
-                disabled={
-                  !form.getValues("firstName") || 
-                  !form.getValues("lastName") || 
-                  !form.getValues("email") || 
-                  !form.getValues("country") ||
-                  !form.getValues("birthDate")
-                }
+                disabled={!isStep3Valid()}
               >
                 Continue
               </Button>
@@ -447,9 +486,12 @@ export function RTBFForm() {
                 return (
                   <>
                     <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-                      <pre className="whitespace-pre-wrap font-sans">
-                        {preview.body}
-                      </pre>
+                      <div 
+                        className="whitespace-pre-wrap font-mono text-sm"
+                        dangerouslySetInnerHTML={{ 
+                          __html: preview.body.replace(/\n/g, '<br/>') 
+                        }} 
+                      />
                     </div>
 
                     {preview.total > 1 && (
@@ -492,7 +534,7 @@ export function RTBFForm() {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>
-                        I confirm that I am the individual whose data this request concerns (the data subject) and I authorize Please Forget Me to submit this request on my behalf. I confirm I have read and understood my rights under GDPR Article 17, and I am requesting the erasure of my personal data.
+                        I confirm that I am the individual whose data this request concerns and I authorize <i>Please Forget Me</i> to submit this request on my behalf. Additionally, I have read and understood my rights under <a href="https://gdpr-info.eu/art-17-gdpr/">GDPR Article 17</a>, and I am requesting the erasure of my personal data.
                       </FormLabel>
                     </div>
                   </FormItem>
@@ -506,7 +548,18 @@ export function RTBFForm() {
                   <FormItem>
                     <FormLabel>Signature</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Type your full name" />
+                      <SignatureCanvas 
+                        {...field} 
+                        isConfirmed={isSignatureConfirmed}
+                        onConfirmChange={(confirmed) => {
+                          console.log('Confirm change called:', confirmed)
+                          setIsSignatureConfirmed(confirmed)
+                        }}
+                        onSignatureChange={(value) => {
+                          console.log('Signature change called:', value.slice(0, 50) + '...')
+                          field.onChange(value)
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -520,7 +573,7 @@ export function RTBFForm() {
                 <Button 
                   type="submit"
                   className="flex-1"
-                  disabled={!form.watch("authorization") || !form.watch("signature")}
+                  disabled={!isStep4Valid()}
                 >
                   Submit Request
                 </Button>

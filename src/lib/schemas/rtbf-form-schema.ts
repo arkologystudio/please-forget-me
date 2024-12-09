@@ -78,21 +78,7 @@ export const reasons = [
 const evidenceSchema = z.object({
   chatLinks: z.array(
     z.string()
-      .min(1, "Please enter a chat link URL")
-      .refine(
-        (url) => {
-          if (!url) return true; // Allow empty strings
-          try {
-            new URL(url);
-            return true;
-          } catch {
-            return "Please enter a valid URL starting with http:// or https://";
-          }
-        },
-        {
-          message: "Please enter a valid URL starting with http:// or https://"
-        }
-      )
+      .min(2, "Please enter a chat link URL")
   ).optional(),
   additionalNotes: z.string().optional(),
 })
@@ -124,7 +110,11 @@ export const rtbfFormSchema = z.object({
   prompts: z.array(z.string()).optional(),
   evidence: z.record(z.string(), evidenceSchema),
   authorization: z.boolean().refine(val => val === true, { message: "You must authorize the request" }),
-  signature: z.string().min(2, "Signature must be at least 2 characters"),
+  signature: z.string()
+    .min(22, "Please provide a valid signature")
+    .refine((val) => val.startsWith('data:image'), {
+      message: "Invalid signature format"
+    }),
 })
 
 export type RTBFFormValues = z.infer<typeof rtbfFormSchema> 
