@@ -25,6 +25,7 @@ import { generateLetters, generatePreviewLetter } from "@/lib/schemas/rtbf-lette
 export function RTBFForm() {
   const [step, setStep] = useState(1)
   const TOTAL_STEPS = 4
+  const [letterIndex, setLetterIndex] = useState(0)
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, TOTAL_STEPS))
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 0))
@@ -54,21 +55,23 @@ export function RTBFForm() {
   async function onSubmit(data: RTBFFormValues) {
     try {
       const letters = generateLetters(data)
+
+      console.log("Letters: ", letters)
       
-      const response = await fetch('/api/submit-rtbf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          formData: data,
-          letters
-        }),
-      })
+    //   const response = await fetch('/api/submit-rtbf', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({
+    //       formData: data,
+    //       letters
+    //     }),
+    //   })
       
-      if (!response.ok) {
-        throw new Error('Failed to submit request')
-      }
+    //   if (!response.ok) {
+    //     throw new Error('Failed to submit request')
+    //   }
       
       // Handle success (e.g., show success message, redirect)
     } catch (error) {
@@ -435,14 +438,46 @@ export function RTBFForm() {
           <>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium">That&apos;s it! Based on the information you provided, the following letter has been compiled:</h3>
+                <h3 className="text-lg font-medium">That&apos;s it! Based on the information you provided, the following request(s) have been compiled:</h3>
               </div>
 
-              <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-                <pre className="whitespace-pre-wrap font-sans">
-                  {generatePreviewLetter(form.getValues())}
-                </pre>
-              </div>
+              {(() => {
+                const preview = generatePreviewLetter(form.getValues(), letterIndex)
+                
+                return (
+                  <>
+                    <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+                      <pre className="whitespace-pre-wrap font-sans">
+                        {preview.body}
+                      </pre>
+                    </div>
+
+                    {preview.total > 1 && (
+                      <div className="flex items-center justify-between gap-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setLetterIndex(i => i - 1)}
+                          disabled={preview.currentIndex === 0}
+                        >
+                          Previous Letter
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Letter {preview.currentIndex + 1} of {preview.total}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setLetterIndex(i => i + 1)}
+                          disabled={preview.currentIndex === preview.total - 1}
+                        >
+                          Next Letter
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
 
               <FormField
                 control={form.control}
@@ -457,10 +492,7 @@ export function RTBFForm() {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>
-                        I confirm that I am the individual whose data this request concerns (the data subject) and I authorize Please Forget Me to submit this request on my behalf.
-                      </FormLabel>
-                      <FormLabel>
-                        I confirm I have read and understood my rights under GDPR Article 17, and I am requesting the erasure of my personal data.
+                        I confirm that I am the individual whose data this request concerns (the data subject) and I authorize Please Forget Me to submit this request on my behalf. I confirm I have read and understood my rights under GDPR Article 17, and I am requesting the erasure of my personal data.
                       </FormLabel>
                     </div>
                   </FormItem>

@@ -61,14 +61,26 @@ export function generateLetters(data: RTBFFormValues): LetterOutput[] {
 }
 
 // For preview purposes in the form
-export function generatePreviewLetter(data: RTBFFormValues): string {
+export function generatePreviewLetter(data: RTBFFormValues, index: number = 0): {
+  body: string,
+  currentIndex: number,
+  total: number
+} {
   const letters = generateLetters(data)
   
-  if (letters.length === 0) return "No companies selected"
-  if (letters.length === 1) return letters[0].body
+  if (letters.length === 0) return { 
+    body: "No companies selected", 
+    currentIndex: 0, 
+    total: 0 
+  }
+
+  // Ensure index is within bounds
+  const safeIndex = Math.max(0, Math.min(index, letters.length - 1))
+  const letter = letters[safeIndex]
   
-  // If multiple letters, show a preview of all
-  return letters.map(letter => 
-    `To: ${letter.to}\nSubject: ${letter.subject}\n\n${letter.body}`
-  ).join('\n\n---\n\n')
+  return {
+    body: `To: ${letter.to}\nSubject: ${letter.subject}\n\n${letter.body}`,
+    currentIndex: safeIndex,
+    total: letters.length
+  }
 }
