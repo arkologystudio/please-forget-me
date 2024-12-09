@@ -121,3 +121,22 @@ const createMailgunClient = () => {
     throw error;
   }
 };
+
+export const sendVerificationEmail = async (email: string, code: string) => {
+  try {
+    const mg = createMailgunClient();
+
+    const messageData: MailgunMessageData = {
+      from: "YourApp <noreply@yourdomain.com>",
+      to: email,
+      subject: "Your Verification Code",
+      text: `Your verification code is: ${code}. It will expire in 10 minutes.`,
+    };
+
+    const body = await mg.messages.create(DOMAIN, messageData);
+    return body;
+  } catch (error) {
+    console.error("Error sending verification email:", error);
+    throw error;
+  }
+};
