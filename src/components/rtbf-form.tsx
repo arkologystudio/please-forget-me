@@ -102,16 +102,8 @@ export function RTBFForm() {
   // Add this validation function near isStep1Valid()
   const isStep2Valid = () => {
     const values = form.getValues();
-    const selectedCompanies = values.companies;
-
     // Check if at least one prompt is provided
     if (!values.prompts?.length) return false;
-
-    // Check if each selected company has at least one chat link
-    // for (const companyId of selectedCompanies) {
-    //   const companyEvidence = values.evidence[companyId];
-    //   if (companyEvidence?.chatLinks?.length === 0) return false;
-    // }
 
     return true;
   };
