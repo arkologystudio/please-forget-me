@@ -22,7 +22,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto space-y-6 text-slate-700">
             <p className="text-lg leading-relaxed">
-              In today's AI-driven world, your personal data is being used to train <a href="#" className="text-blue-600 hover:text-blue-800 underline">large language models</a> and other AI systems. Under the <a href="https://gdpr-info.eu/art-17-gdpr/" className="text-blue-600 hover:text-blue-800 underline">GDPR's Right to be Forgotten (Article 17)</a>, you have the legal right to request the deletion of your personal data from these systems.
+              In today&apos;s AI-driven world, your personal data is being used to train <a href="#" className="text-blue-600 hover:text-blue-800 underline">large language models</a> and other AI systems. Under the <a href="https://gdpr-info.eu/art-17-gdpr/" className="text-blue-600 hover:text-blue-800 underline">GDPR&apos;s Right to be Forgotten (Article 17)</a>, you have the legal right to request the deletion of your personal data from these systems.
             </p>
 
             <p className="text-lg leading-relaxed">

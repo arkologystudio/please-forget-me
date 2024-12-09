@@ -29,7 +29,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { PhoneInput } from "@/components/ui/phone-input";
 import {
   generateLetters,
   generatePreviewLetter,
@@ -93,11 +92,6 @@ export function RTBFForm() {
       console.error("Error submitting form:", error);
     }
   }
-
-  const selectedCompanyNames = form
-    .watch("companies")
-    .map((id) => companies.find((c) => c.id === id)?.label)
-    .join(", ");
 
   // Custom validation for step 1
   const isStep1Valid = () => {
