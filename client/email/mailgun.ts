@@ -1,17 +1,12 @@
-import mailgun from "mailgun-js";
+import formData from "form-data";
+import Mailgun, { MailgunMessageData } from "mailgun.js";
 
 import { Organisation, User } from "@prisma/client";
 import { reasons, RTBFFormValues } from "@/lib/schemas/rtbf-form-schema";
 
 const DOMAIN = process.env.MAILGUN_DOMAIN || "";
-const API_KEY = process.env.MAILGUN_API_KEY || "";
 const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
-const mg = mailgun({
-  apiKey: API_KEY,
-  domain: DOMAIN,
-  endpoint: "https://api.eu.mailgun.net",
-});
 
 // Helper function to generate the letter
 function generateLetter(data: RTBFFormValues, organisation: Organisation) {
@@ -58,7 +53,8 @@ ${data.firstName} ${data.lastName}`;
 export const sendInitialRequestEmail = async (
   recipient: Organisation,
   data: RTBFFormValues
-): Promise<mailgun.messages.SendResponse> => {
+) => {
+  const mg = createMailgunClient();
   console.log("sendInitialRequestEmail called with arguments:", {
     recipient,
     data,
@@ -67,20 +63,21 @@ export const sendInitialRequestEmail = async (
   console.log("Environment variables:", {
     FROM_EMAIL,
     ORGANISATION_EMAIL,
-    API_KEY: API_KEY ? "set" : "not set",
     DOMAIN: DOMAIN ? "set" : "not set",
   });
   try {
     const emailContent = generateLetter(data, recipient);
 
-    const mailData: mailgun.messages.SendData = {
+    const mailData: MailgunMessageData = {
       from: `Citizen of the Internet <${FROM_EMAIL}>`,
       to: recipient.email.toString(),
       subject: "Right to be forgotten request",
       text: emailContent,
     };
 
-    const body = await mg.messages().send(mailData);
+    console.log("mailData:", mailData, DOMAIN);
+
+    const body = await mg.messages.create(DOMAIN, mailData);
     console.log("Email sent:", body);
     return body;
   } catch (error) {
@@ -89,22 +86,57 @@ export const sendInitialRequestEmail = async (
   }
 };
 
-export const sendDeliveryConfirmationEmail = async (
-  recipient: User
-): Promise<mailgun.messages.SendResponse> => {
+export const sendDeliveryConfirmationEmail = async (recipient: User) => {
   try {
-    const data: mailgun.messages.SendData = {
+    const mg = createMailgunClient();
+    const data: MailgunMessageData = {
       from: `Please Forget Me <${ORGANISATION_EMAIL}>`,
       to: recipient.email,
       subject: "Delivery Confirmation: Request to be forgotten",
       text: "This is an email to confirm that your request to be forgotten has been delivered to the relevant organisation.",
     };
 
-    const body = await mg.messages().send(data);
+    const body = await mg.messages.create(DOMAIN, data);
     console.log("Email sent:", body);
     return body;
   } catch (error) {
     console.error("Error sending thread confirmation email:", error);
+    throw error;
+  }
+};
+
+const createMailgunClient = () => {
+  try {
+    if (!process.env.MAILGUN_API_KEY) {
+      throw new Error("MAILGUN_API_KEY is not set");
+    }
+    const mailgun = new Mailgun(formData);
+    const mg = mailgun.client({
+      username: "api",
+      key: process.env.MAILGUN_API_KEY,
+    });
+    return mg;
+  } catch (error) {
+    console.error("Error creating mailgun client:", error);
+    throw error;
+  }
+};
+
+export const sendVerificationEmail = async (email: string, code: string) => {
+  try {
+    const mg = createMailgunClient();
+
+    const messageData: MailgunMessageData = {
+      from: "YourApp <noreply@yourdomain.com>",
+      to: email,
+      subject: "Your Verification Code",
+      text: `Your verification code is: ${code}. It will expire in 10 minutes.`,
+    };
+
+    const body = await mg.messages.create(DOMAIN, messageData);
+    return body;
+  } catch (error) {
+    console.error("Error sending verification email:", error);
     throw error;
   }
 };

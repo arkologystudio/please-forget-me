@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DB_USER") + "://" + env("DB_PASSWORD") + "@" + env("DB_HOST") + ":" + env("DB_PORT") + "/" + env("DB_NAME") + "?schema=" + env("DB_SCHEMA")
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -8,12 +8,15 @@ generator client {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  identifier      String           @unique
-  threads         Thread[]
-  createdAt       DateTime         @default(now())
-  email           String           @unique
-  formSubmissions FormSubmission[]
+  id                     Int                      @id @default(autoincrement())
+  identifier             String                   @unique
+  threads                Thread[]
+  createdAt              DateTime                 @default(now())
+  email                  String                   @unique
+  formSubmissions        FormSubmission[]
+  Email                  Email[]
+  EmailVerificationToken EmailVerificationToken[]
+  verified               Boolean                  @default(false)
 }
 
 model Organisation {
@@ -27,7 +30,7 @@ model Organisation {
 model Thread {
   id              Int              @id @default(autoincrement())
   user            User             @relation(fields: [userId], references: [id])
-  userId          String
+  userId          Int
   organisation    Organisation     @relation(fields: [organisationId], references: [id])
   organisationId  Int
   emails          Email[]
@@ -37,17 +40,22 @@ model Thread {
 }
 
 model Email {
-  id       Int      @id @default(autoincrement())
-  thread   Thread   @relation(fields: [threadId], references: [id])
-  threadId Int
-  sender   String // "user" or "organisation"
-  content  String
-  sentAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  thread    Thread   @relation(fields: [threadId], references: [id])
+  threadId  Int
+  sender    String
+  content   String
+  createdAt DateTime @default(now())
+  sentAt    DateTime
+  status    String   @default("pending")
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  mailgunId String   @unique
 }
 
 model FormSubmission {
-  id        String   @id @default(cuid())
-  userId    String
+  id        Int      @id @default(autoincrement())
+  userId    Int
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   data      Json
@@ -56,8 +64,18 @@ model FormSubmission {
 }
 
 model FailedInitiationAttempt {
-  id          Int      @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   errorMessage String
-  data        Json
-  createdAt   DateTime @default(now())
+  data         Json
+  createdAt    DateTime @default(now())
+}
+
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  code      String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
 }

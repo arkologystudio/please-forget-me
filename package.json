@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "db-seed": "tsc prisma/seed.ts && cat prisma/seed.js | node --input-type=\"commonjs\" && rm prisma/seed.js",
+    "db-seed": "tsc prisma/seed.ts && node prisma/seed.js && rm prisma/seed.js",
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma migrate deploy && npx prisma generate && next build",
+    "build-vercel": "npm run build && next lint && npm run db-seed",
     "start": "next start",
     "lint": "next lint"
   },
@@ -32,8 +33,10 @@
     "cmdk": "^1.0.0",
     "country-region-data": "^3.1.0",
     "lucide-react": "^0.465.0",
-    "mailgun-js": "^0.6.7",
+    "mailgun.js": "^10.2.4",
     "next": "15.0.3",
+    "qs": "^6.11.0",
+    "raw-body": "^2.5.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-google-recaptcha": "^3.1.0",
@@ -44,8 +47,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/mailgun-js": "^0.22.18",
     "@types/node": "^20",
+    "@types/qs": "^6.9.17",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",
