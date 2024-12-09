@@ -73,20 +73,19 @@ export function RTBFForm() {
 
       console.log("Letters: ", letters);
 
-      //   const response = await fetch('/api/submit-rtbf', {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify({
-      //       formData: data,
-      //       letters
-      //     }),
-      //   })
+        const response = await fetch('/api/submit-rtbf', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            formData: letters,
+          }),
+        })
 
-      //   if (!response.ok) {
-      //     throw new Error('Failed to submit request')
-      //   }
+        if (!response.ok) {
+          throw new Error('Failed to submit request')
+        }
 
       // Handle success (e.g., show success message, redirect)
     } catch (error) {
@@ -279,14 +278,17 @@ export function RTBFForm() {
         {step === 2 && (
           <>
             <div className="space-y-4 border-b pb-4 mb-6">
-              <h3 className="font-medium">AI Interaction Details</h3>
+              <h3 className="font-medium">System Interaction Details</h3>
+              <p>
+                The following information helps companies identify and remove your personal data from their systems.
+              </p>
               <FormField
                 control={form.control}
                 name="prompts"
                 rules={{ required: "At least one prompt is required" }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="prompts">Prompts Used</FormLabel>
+                    <FormLabel htmlFor="prompts">Prompts Used (Separate by comma)</FormLabel>
                     <FormControl>
                       <Input
                         id="prompts"
@@ -426,9 +428,9 @@ export function RTBFForm() {
         {step === 3 && (
           <>
             <div className="space-y-2">
+              <h3 className="font-medium">Personal Information</h3>
               <p>
-                The following personal information is submitted to{" "}
-                {selectedCompanyNames} in the Right to be Forgotten request.
+                The following information is included in your Right to be Forgotten request to ensure companies can 1) identify you and 2) remove your personal data from their systems.
               </p>
             </div>
 
@@ -547,8 +549,7 @@ export function RTBFForm() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium">
-                  That&apos;s it! Based on the information you provided, the
-                  following request(s) have been compiled:
+                  That&apos;s it! Please review the request(s) below and proceed to submission:
                 </h3>
               </div>
 
