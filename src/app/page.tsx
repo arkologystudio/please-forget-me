@@ -1,4 +1,5 @@
-import { RTBFForm } from "@/components/rtbf-form"
+import React from "react";
+import { RTBFForm } from "@/components/rtbf-form";
 
 export default function Home() {
   return (
@@ -20,5 +21,5 @@ export default function Home() {
         </div>
       </section>
     </main>
-  )
+  );
 }

@@ -1,11 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -15,37 +7,63 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 model User {
-  id         Int      @id @default(autoincrement())
-  identifier String   @unique
-  threads    Thread[]
-  createdAt  DateTime @default(now())
+  id              Int               @id @default(autoincrement())
+  identifier      String            @unique
+  threads         Thread[]
+  createdAt       DateTime          @default(now())
+  email           String            @unique
+  formSubmissions FormSubmission[]
+  Email           Email[]
 }
 
 model Organisation {
-  id       Int      @id @default(autoincrement())
-  name     String
-  email    String
-  threads  Thread[]
+  id      Int      @id @default(autoincrement())
+  name    String
+  email   String   @unique
+  threads Thread[]
+  slug    String   @unique
 }
 
 model Thread {
-  id             Int            @id @default(autoincrement())
-  user           User           @relation(fields: [userId], references: [id])
-  userId         Int
-  organisation   Organisation   @relation(fields: [organisationId], references: [id])
-  organisationId Int
-  emails         Email[]
-  createdAt      DateTime       @default(now())
-  status         String         // e.g., "open", "closed"
+  id              Int              @id @default(autoincrement())
+  user            User             @relation(fields: [userId], references: [id])
+  userId          Int
+  organisation    Organisation     @relation(fields: [organisationId], references: [id])
+  organisationId  Int
+  emails          Email[]
+  createdAt       DateTime         @default(now())
+  status          String // e.g., "open", "closed"
+  formSubmissions FormSubmission[]
 }
 
 model Email {
   id        Int      @id @default(autoincrement())
   thread    Thread   @relation(fields: [threadId], references: [id])
   threadId  Int
-  sender    String   // "user" or "organisation"
+  sender    String
   content   String
-  sentAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  sentAt    DateTime
+  status    String   @default("pending")
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  mailgunId String   @unique
+}
+
+model FormSubmission {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  data      Json
+  Thread    Thread?  @relation(fields: [threadId], references: [id])
+  threadId  Int?
+}
+
+model FailedInitiationAttempt {
+  id           Int      @id @default(autoincrement())
+  errorMessage String
+  data         Json
+  createdAt    DateTime @default(now())
 }
