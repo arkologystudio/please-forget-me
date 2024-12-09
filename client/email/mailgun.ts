@@ -8,6 +8,7 @@ const DOMAIN = process.env.MAILGUN_DOMAIN || "";
 const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 
+// TODO: align with request preview (rtbf-letter-)
 // Helper function to generate the letter
 function generateLetter(data: RTBFFormValues, organisation: Organisation) {
   const selectedReasons = data.reasons
@@ -28,21 +29,7 @@ Country: ${data.country}
 Reasons for Deletion:
 ${selectedReasons.map((r) => `- ${r?.label}`).join("\n")}
 
-${
-  data.evidence.openai?.length
-    ? `\nChatGPT Evidence Links:\n${data.evidence.openai.join("\n")}`
-    : ""
-}
-${
-  data.evidence.anthropic?.length
-    ? `\nClaude Evidence Links:\n${data.evidence.anthropic.join("\n")}`
-    : ""
-}
-${
-  data.evidence.meta?.length
-    ? `\nLLama Evidence Links:\n${data.evidence.meta.join("\n")}`
-    : ""
-}
+// add evidence
 
 I look forward to receiving confirmation that you have complied with my request.
 
