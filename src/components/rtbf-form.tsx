@@ -15,11 +15,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
-  companies,
+  organisations,
   reasons,
   rtbfFormSchema,
   type RTBFFormValues,
-} from "@/lib/schemas/rtbf-form-schema";
+} from "@/schemas/rtbf-form-schema";
 import { Progress } from "@/components/ui/progress";
 import CountrySelect from "@/components/ui/country-select";
 import {
@@ -29,26 +29,55 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { PhoneInput } from "@/components/ui/phone-input";
+
+import { SignatureCanvas } from "@/components/ui/signature-pad";
+import { useToast } from "@/hooks/use-toast"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function RTBFForm() {
   const [step, setStep] = useState(1);
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 5;
+  const [isSignatureConfirmed, setIsSignatureConfirmed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast()
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+  const [cardIndex, setCardIndex] = useState(0);
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 0));
 
+  const nextCard = () => {
+    const selectedOrgs = form.getValues("organisations");
+    setCardIndex((prev) => Math.min(prev + 1, selectedOrgs.length - 1));
+  };
+
+  const prevCard = () => {
+    setCardIndex((prev) => Math.max(prev - 1, 0));
+  };
+
   const form = useForm<RTBFFormValues>({
     resolver: zodResolver(rtbfFormSchema),
     defaultValues: {
-      companies: [],
+      organisations: [],
       reasons: [],
       firstName: "",
       lastName: "",
       email: "",
       country: "",
-      phone: "",
-      evidence: {},
+      birthDate: "",
+      prompts: [],
+      evidence: {
+        openai: { chatLinks: [] },
+        anthropic: { chatLinks: [] },
+        meta: { chatLinks: [] },
+      },
       authorization: false,
       signature: "",
     },
@@ -56,214 +85,306 @@ export function RTBFForm() {
   });
 
   async function onSubmit(data: RTBFFormValues) {
-    console.log("Attempting to submit form data:", data);
     try {
-      console.log("Submitting form data:", data);
-      const response = await fetch("/api/submit-rtbf", {
-        method: "POST",
+      setIsSubmitting(true);
+      const response = await fetch('/api/submit-rtbf', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to submit request");
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit request');
       }
 
-      console.log("Request submitted successfully");
+      await response.json();
+      
+      toast({
+        title: "Success!",
+        description: "Your request has been submitted successfully.",
+      });
+      
+      window.location.href = '/success';
+      
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'An error occurred while submitting your request',
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
-  const selectedCompanyNames = form
-    .watch("companies")
-    .map((id) => companies.find((c) => c.id === id)?.label)
-    .join(", ");
+  // FORM STEPS VALIDATION
 
-  // Helper function to generate the letter
-  function generateLetter(data: RTBFFormValues) {
-    const selectedCompanies = data.companies
-      .map((id) => companies.find((c) => c.id === id))
-      .filter(Boolean);
-
-    const selectedReasons = data.reasons
-      .map((id) => reasons.find((r) => r.id === id))
-      .filter(Boolean);
-
-    return `Dear ${selectedCompanies.map((c) => c?.label).join(", ")},
-
-I am writing to request the deletion of personal data under Article 17 of the General Data Protection Regulation (GDPR) on behalf of ${
-      data.firstName
-    } ${data.lastName}.
-
-Personal Details:
-Name: ${data.firstName} ${data.lastName}
-Email: ${data.email}
-Country: ${data.country}
-
-Reasons for Deletion:
-${selectedReasons.map((r) => `- ${r?.label}`).join("\n")}
-
-${
-  data.evidence.openai?.length
-    ? `\nChatGPT Evidence Links:\n${data.evidence.openai.join("\n")}`
-    : ""
-}
-${
-  data.evidence.anthropic?.length
-    ? `\nClaude Evidence Links:\n${data.evidence.anthropic.join("\n")}`
-    : ""
-}
-${
-  data.evidence.meta?.length
-    ? `\nLLama Evidence Links:\n${data.evidence.meta.join("\n")}`
-    : ""
-}
-
-I look forward to receiving confirmation that you have complied with my request.
-
-Best regards,
-${data.firstName} ${data.lastName}`;
-  }
-
-  // Custom validation for step 1
   const isStep1Valid = () => {
     const values = form.getValues();
-    return values.companies.length > 0 && values.reasons.length > 0;
+    return values.organisations.length > 0 && values.reasons.length > 0;
   };
 
+  const isStep2Valid = () => {
+    const values = form.getValues();
+    if (!values.prompts?.length) return false;
+    return true;
+  };
+
+  const isStep3Valid = () => {
+    const values = form.getValues();
+    return !!(
+      values.firstName?.trim() &&
+      values.lastName?.trim() &&
+      values.email?.trim() &&
+      values.birthDate?.trim()
+    );
+  };
+
+  const isStep4Valid = () => {
+    const values = form.getValues();
+    return !!(values.authorization && values.signature && isSignatureConfirmed);
+  };
+
+  const handleSendVerificationCode = async () => {
+    try {
+      const response = await fetch('/api/request-email-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail: form.getValues("email") }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send verification code');
+
+      setVerificationSent(true);
+      toast({
+        title: "Verification Code Sent",
+        description: "Please check your email for the verification code.",
+      });
+    } catch (error) {
+        console.error(error)
+      toast({
+        title: "Error",
+        description: "Failed to send verification code. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    try {
+      const response = await fetch('/api/verify-email-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail: form.getValues("email"),
+          code: verificationCode
+        }),
+      });
+
+      if (!response.ok) throw new Error('Invalid verification code');
+
+      setIsVerified(true);
+      toast({
+        title: "Email Verified",
+        description: "Your email has been verified successfully.",
+      });
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "Error",
+        description: "Invalid verification code. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateSummaryCard = (formData: RTBFFormValues) => {
+    const selectedOrgs = formData.organisations;
+    if (selectedOrgs.length === 0) return null;
+
+    const org = selectedOrgs[cardIndex];
+    const orgDetails = organisations.find(o => o.slug === org);
+    
+    return (
+      <Card key={org} className="mb-4">
+        <CardHeader>
+          <CardTitle>{orgDetails?.label}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="font-medium">Request Type</p>
+              <p className="text-muted-foreground">Right to Be Forgotten</p>
+            </div>
+            <div>
+              <p className="font-medium">Est. Response Time</p>
+              <p className="text-muted-foreground">14-28 days</p>
+            </div>
+            <div>
+              <p className="font-medium">Prompts Provided</p>
+              <p className="text-muted-foreground">
+                {formData.prompts?.length || 0} prompt(s)
+              </p>
+            </div>
+            <div>
+              <p className="font-medium">Selected Reasons</p>
+              <p className="text-muted-foreground">
+                {formData.reasons.length} reason(s)
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+////////////
+// FORM 
+////////////
   return (
     <Form {...form}>
       <Progress
         value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
         className="mb-6"
       />
-      <form
-        onSubmit={form.handleSubmit(onSubmit, (errors) => {
-          console.log("Validation errors:", errors);
-        })}
-        className="space-y-8"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        
         {step === 1 && (
           <>
             <FormField
               control={form.control}
-              name="companies"
-              rules={{ required: "Please select at least one company" }}
+              name="organisations"
+              rules={{ required: "Please select at least one organisation" }}
               render={() => (
                 <FormItem>
-                  <FormLabel>Dear,</FormLabel>
-                  <div className="space-y-2">
-                    {companies.map((company) => (
+                  <div className="space-y-4">
+                    <FormLabel>Dear,</FormLabel>
+                    <div className="space-y-2">
+        
+                      {organisations.map((organisation) => (
+                        <FormField
+                          key={organisation.slug}
+                          control={form.control}
+                          name="organisations"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(organisation.slug)}
+                                  onCheckedChange={(checked) => {
+                                    const value = field.value || [];
+                                    return checked
+                                      ? field.onChange([...value, organisation.slug])
+                                      : field.onChange(
+                                          value.filter(
+                                            (val) => val !== organisation.slug
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className={""}>
+                                {organisation.label}
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                       <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mb-2"
+                        onClick={() => {
+                          const allOrgs = organisations.map(org => org.slug);
+                          const currentValue = form.getValues("organisations");
+                          if (currentValue.length === organisations.length) {
+                            form.setValue("organisations", []);
+                          } else {
+                            form.setValue("organisations", allOrgs);
+                          }
+                        }}
+                      >
+                        {form.getValues("organisations").length === organisations.length 
+                          ? "Deselect All" 
+                          : "Select All"}
+                      </Button>
+                    </div>
+                    <p>I&apos;d like to be forgotten.</p>
+
+                    <div className="space-y-4">
+                      <p>
+                        Please remove my personal data from your systems, for
+                        the following reasons:
+                      </p>
                       <FormField
-                        key={company.id}
                         control={form.control}
-                        name="companies"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-3">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(company.id)}
-                                onCheckedChange={(checked) => {
-                                  const value = field.value || [];
-                                  return checked
-                                    ? field.onChange([...value, company.id])
-                                    : field.onChange(
-                                        value.filter(
-                                          (val) => val !== company.id
-                                        )
-                                      );
-                                }}
-                                disabled={
-                                  company.id === "anthropic" ||
-                                  company.id === "meta"
-                                }
-                              />
-                            </FormControl>
-                            <FormLabel
-                              className={
-                                company.id === "anthropic" ||
-                                company.id === "meta"
-                                  ? "text-gray-500"
-                                  : ""
-                              }
-                            >
-                              {company.label}{" "}
-                              {company.id === "anthropic" ||
-                              company.id === "meta"
-                                ? "(Coming Soon)"
-                                : ""}
-                            </FormLabel>
+                        name="reasons"
+                        rules={{
+                          required: "Please select at least one reason",
+                        }}
+                        render={() => (
+                          <FormItem>
+                            <div className="space-y-2">
+                              {reasons.map((reason) => (
+                                <FormField
+                                  key={reason.id}
+                                  control={form.control}
+                                  name="reasons"
+                                  render={({ field }) => (
+                                    <FormItem className="flex items-center space-x-3">
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(
+                                            reason.id
+                                          )}
+                                          onCheckedChange={(checked) => {
+                                            const value = field.value || [];
+                                            return checked
+                                              ? field.onChange([
+                                                  ...value,
+                                                  reason.id,
+                                                ])
+                                              : field.onChange(
+                                                  value.filter(
+                                                    (val) => val !== reason.id
+                                                  )
+                                                );
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <div className="flex items-center space-x-2">
+                                        <FormLabel className="text-sm">
+                                          {reason.label}
+                                        </FormLabel>
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger>
+                                              <InfoCircledIcon className="h-4 w-4 text-muted-foreground" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p className="w-80 text-sm">
+                                                {reason.tooltip}
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </div>
+                                    </FormItem>
+                                  )}
+                                />
+                              ))}
+                            </div>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
-                    ))}
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <p>
-                      I&apos;d like to be forgotten, for the following reasons:
-                    </p>
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="reasons"
-                    rules={{ required: "Please select at least one reason" }}
-                    render={() => (
-                      <FormItem>
-                        <div className="space-y-2">
-                          {reasons.map((reason) => (
-                            <FormField
-                              key={reason.id}
-                              control={form.control}
-                              name="reasons"
-                              render={({ field }) => (
-                                <FormItem className="flex items-center space-x-3">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(reason.id)}
-                                      onCheckedChange={(checked) => {
-                                        const value = field.value || [];
-                                        return checked
-                                          ? field.onChange([
-                                              ...value,
-                                              reason.id,
-                                            ])
-                                          : field.onChange(
-                                              value.filter(
-                                                (val) => val !== reason.id
-                                              )
-                                            );
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <div className="flex items-center space-x-2">
-                                    <FormLabel className="text-sm">
-                                      {reason.label}
-                                    </FormLabel>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger>
-                                          <InfoCircledIcon className="h-4 w-4 text-muted-foreground" />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p className="w-80 text-sm">
-                                            {reason.tooltip}
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -278,12 +399,163 @@ ${data.firstName} ${data.lastName}`;
             </div>
           </>
         )}
+
         {step === 2 && (
           <>
-            <div className="space-y-2">
+            <div className="space-y-4 border-b pb-4 mb-6">
+              <h3 className="font-medium">System Interaction Details</h3>
               <p>
-                The following personal information is submitted to{" "}
-                {selectedCompanyNames} in the Right to be Forgotten request.
+                The following information assists organisations to identify and remove your personal data from their systems.
+              </p>
+              <FormField
+                control={form.control}
+                name="prompts"
+                rules={{ required: "At least one prompt is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="prompts">Prompts Used (Separate by comma)</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="prompts"
+                        placeholder="Prompts that reveal your personal data (e.g., 'Where does <full name> live?')"
+                        value={field.value?.[field.value.length - 1] || ""}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          field.onChange(newValue ? [newValue] : []);
+                        }}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-4">
+              {form.watch("organisations").map((organisationId) => {
+                const organisation = organisations.find((c) => c.slug === organisationId);
+                if (!organisation) return null;
+
+                return (
+                  <div
+                    key={organisationId}
+                    className="space-y-4 border-b pb-4 last:border-b-0"
+                  >
+                    <h3 className="font-medium">
+                      <b>{organisation.label} Evidence</b>
+                    </h3>
+
+                    {organisation.evidenceFields.chatLinks && (
+                      <FormField
+                        control={form.control}
+                        name={`evidence.${organisationId}.chatLinks`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor={`${organisation.slug}-chatlinks`}>
+                              {organisation.evidenceFields.chatLinks?.label}
+                            </FormLabel>
+                            <div className="space-y-2">
+                              {(!field.value?.length ? [""] : field.value).map(
+                                (link, index) => (
+                                  <div key={index} className="flex gap-2">
+                                    <FormControl>
+                                      <Input
+                                        id={`${organisation.slug}-chatlinks-${index}`}
+                                        placeholder={
+                                          organisation.evidenceFields.chatLinks
+                                            ?.placeholder
+                                        }
+                                        value={link}
+                                        onChange={(e) => {
+                                          const newLinks = [
+                                            ...(field.value || []),
+                                          ];
+                                          newLinks[index] = e.target.value;
+                                          field.onChange(newLinks);
+                                        }}
+                                      />
+                                    </FormControl>
+                                    {(field.value || []).length > 1 && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                          const newLinks =
+                                            field.value?.filter(
+                                              (_, i) => i !== index
+                                            ) || [];
+                                          field.onChange(newLinks);
+                                        }}
+                                      >
+                                        ✕
+                                      </Button>
+                                    )}
+                                  </div>
+                                )
+                              )}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  field.onChange([...(field.value || []), ""]);
+                                }}
+                              >
+                                Add Another Link
+                              </Button>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name={`evidence.${organisationId}.additionalNotes`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel htmlFor={`${organisation.slug}-additional-notes`}>
+                            Additional Notes (Optional)
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              id={`${organisation.slug}-additional-notes`}
+                              placeholder="Any additional context or information..."
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex space-x-2">
+              <Button type="button" variant="outline" onClick={prevStep}>
+                Back
+              </Button>
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={!isStep2Valid()}
+              >
+                Continue
+              </Button>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <div className="space-y-2">
+              <h3 className="font-medium">Personal Information</h3>
+              <p>
+                The following information is included in your Right to be Forgotten request to ensure organisations can 1) identify you and 2) remove your personal data from their systems.
               </p>
             </div>
 
@@ -321,25 +593,6 @@ ${data.firstName} ${data.lastName}`;
 
             <FormField
               control={form.control}
-              name="country"
-              rules={{ required: "Country is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country</FormLabel>
-                  <FormControl>
-                    <CountrySelect
-                      onChange={field.onChange}
-                      className="w-full"
-                      placeholder="Select your country"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="email"
               rules={{ required: "Email is required" }}
               render={({ field }) => (
@@ -355,20 +608,50 @@ ${data.firstName} ${data.lastName}`;
 
             <FormField
               control={form.control}
-              name="phone"
+              name="birthDate"
+              rules={{ required: "Date of birth is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number (Optional)</FormLabel>
+                  <FormLabel>Date of Birth</FormLabel>
                   <FormControl>
-                    <PhoneInput
-                      placeholder="Enter your phone number"
-                      {...field}
+                    <Input {...field} type="date" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country (Optional)</FormLabel>
+                  <FormControl>
+                    <CountrySelect
+                      onChange={field.onChange}
+                      className="w-full"
+                      placeholder="Select your country"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number (Optional)</FormLabel>
+                  <FormControl>
+                    <PhoneInput placeholder="Enter your phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
 
             <div className="flex space-x-2">
               <Button type="button" variant="outline" onClick={prevStep}>
@@ -377,108 +660,44 @@ ${data.firstName} ${data.lastName}`;
               <Button
                 type="button"
                 onClick={nextStep}
-                disabled={
-                  !form.getValues("firstName") ||
-                  !form.getValues("lastName") ||
-                  !form.getValues("email") ||
-                  !form.getValues("country")
-                }
+                disabled={!isStep3Valid()}
               >
                 Continue
               </Button>
             </div>
           </>
         )}
-        {step === 3 && (
-          <>
-            <div className="space-y-4">
-              {form.watch("companies").includes("openai") && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="evidence.openai"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ChatGPT Chat Links (Optional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="https://chat.openai.com/..."
-                            onChange={(e) =>
-                              field.onChange([
-                                ...(field.value || []),
-                                e.target.value,
-                              ])
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  <FormField
-                    control={form.control}
-                    name="evidence.prompts"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ChatGPT Prompts</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Tell me about yourself, What's my name, What do you know about me"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
-
-              <FormField
-                control={form.control}
-                name="evidence.urls"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      URL(s) containing the personal information (Optional)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://example.com/page-with-personal-info"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex space-x-2">
-              <Button type="button" variant="outline" onClick={prevStep}>
-                Back
-              </Button>
-              <Button type="button" onClick={nextStep}>
-                Continue
-              </Button>
-            </div>
-          </>
-        )}
         {step === 4 && (
           <>
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium">
-                  That&apos;s it! Based on the information you provided, the
-                  following letter has been compiled:
+                  Almost there! Please review your requests below:
                 </h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Request {cardIndex + 1} of {form.getValues("organisations").length}
+                </p>
               </div>
 
-              <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-                <pre className="whitespace-pre-wrap font-sans">
-                  {generateLetter(form.getValues())}
-                </pre>
+              {generateSummaryCard(form.getValues())}
+
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={prevCard}
+                  disabled={cardIndex === 0}
+                >
+                  Previous Request
+                </Button>
+                <Button
+                  type="button"
+                  onClick={nextCard}
+                  disabled={cardIndex === form.getValues("organisations").length - 1}
+                >
+                  Next Request
+                </Button>
               </div>
 
               <FormField
@@ -494,9 +713,9 @@ ${data.firstName} ${data.lastName}`;
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>
-                        I represent that the information in this request is
-                        accurate and that I am authorized to submit it
-                      </FormLabel>
+                        I confirm that I am the individual whose data this
+                        request concerns and I authorize <i>Please Forget Me</i>{" "}
+                        to submit this request on my behalf.</FormLabel>
                     </div>
                   </FormItem>
                 )}
@@ -509,7 +728,21 @@ ${data.firstName} ${data.lastName}`;
                   <FormItem>
                     <FormLabel>Signature</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Type your full name" />
+                      <SignatureCanvas
+                        {...field}
+                        isConfirmed={isSignatureConfirmed}
+                        onConfirmChange={(confirmed) => {
+                          console.log("Confirm change called:", confirmed);
+                          setIsSignatureConfirmed(confirmed);
+                        }}
+                        onSignatureChange={(value) => {
+                          console.log(
+                            "Signature change called:",
+                            value.slice(0, 50) + "..."
+                          );
+                          field.onChange(value);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -523,20 +756,83 @@ ${data.firstName} ${data.lastName}`;
                 <Button
                   type="submit"
                   className="flex-1"
-                  disabled={
-                    !form.watch("authorization") || !form.watch("signature")
-                  }
+                  disabled={!isStep4Valid()}
+                  onClick={nextStep}
                 >
-                  Submit Request
+                  Next
                 </Button>
-                <button onClick={() => onSubmit(form.getValues())}>
-                  {" "}
-                  Test
-                </button>
               </div>
             </div>
           </>
         )}
+
+        {step === 5 && (
+        <>
+            <div className="space-y-6">
+            <div>
+                <h3 className="text-lg font-medium">
+                Let&apos;s verify your request to make sure it&apos;s you.
+                </h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                We&apos;ll send a verification code to {form.getValues("email")}
+                </p>
+            </div>
+
+            <div className="space-y-4">
+                {!verificationSent ? (
+                <Button
+                    type="button"
+                    onClick={handleSendVerificationCode}
+                >
+                    Send Verification Code
+                </Button>
+                ) : (
+                <div className="space-y-4">
+                    <FormField
+                    name="verificationCode"
+                    render={() => (
+                        <FormItem>
+                        <FormLabel>Verification Code</FormLabel>
+                        <FormControl>
+                            <Input 
+                            placeholder="Enter the code sent to your email"
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value)}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    
+                    <Button
+                    type="button"
+                    onClick={handleVerifyCode}
+                    disabled={!verificationCode}
+                    >
+                    Verify Code
+                    </Button>
+                </div>
+                )}
+            </div>
+            <div className="h-4" />
+            <div className="border-t border-border" />
+            <div className="flex space-x-2">
+                <Button type="button" variant="outline" onClick={prevStep}>
+                Back
+                </Button>
+                <Button
+                type="submit"
+                className="flex-1"
+                disabled={!isVerified || isSubmitting}
+                >
+                {isSubmitting ? "Submitting..." : "Submit"}
+                </Button>
+            </div>
+            </div>
+        </>
+        )}
+
       </form>
     </Form>
   );

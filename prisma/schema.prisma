@@ -8,13 +8,15 @@ generator client {
 }
 
 model User {
-  id              Int               @id @default(autoincrement())
-  identifier      String            @unique
-  threads         Thread[]
-  createdAt       DateTime          @default(now())
-  email           String            @unique
-  formSubmissions FormSubmission[]
-  Email           Email[]
+  id                     Int                      @id @default(autoincrement())
+  identifier             String                   @unique
+  threads                Thread[]
+  createdAt              DateTime                 @default(now())
+  email                  String                   @unique
+  formSubmissions        FormSubmission[]
+  Email                  Email[]
+  EmailVerificationToken EmailVerificationToken[]
+  verified               Boolean                  @default(false)
 }
 
 model Organisation {
@@ -66,4 +68,14 @@ model FailedInitiationAttempt {
   errorMessage String
   data         Json
   createdAt    DateTime @default(now())
+}
+
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  code      String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
 }

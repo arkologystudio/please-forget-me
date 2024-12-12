@@ -135,7 +135,7 @@ function CountrySelect({
     setCountries(
       filterCountries(countryRegionData, priorityOptions, whitelist, blacklist)
     );
-  }, []);
+  }, [priorityOptions, blacklist, whitelist]);
 
   return (
     <Select
