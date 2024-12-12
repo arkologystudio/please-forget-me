@@ -38,6 +38,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { requestEmailVerification, verifyEmailCode } from "@/app/actions/email-verification";
+import { submitRTBF } from "@/app/actions/submit-rtbf";
 
 export function RTBFForm() {
   const [step, setStep] = useState(1);
@@ -83,46 +85,9 @@ export function RTBFForm() {
     },
     mode: "onChange",
   });
-
-  async function onSubmit(data: RTBFFormValues) {
-    try {
-      setIsSubmitting(true);
-      const response = await fetch('/api/submit-rtbf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit request');
-      }
-
-      await response.json();
-      
-      toast({
-        title: "Success!",
-        description: "Your request has been submitted successfully.",
-      });
-      
-      window.location.href = '/success';
-      
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'An error occurred while submitting your request',
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
+  //////////////////////////////
   // FORM STEPS VALIDATION
-
+  //////////////////////////////
   const isStep1Valid = () => {
     const values = form.getValues();
     return values.organisations.length > 0 && values.reasons.length > 0;
@@ -149,23 +114,45 @@ export function RTBFForm() {
     return !!(values.authorization && values.signature && isSignatureConfirmed);
   };
 
+  //////////////////////////////
+  // FORM SUBMISSION
+  //////////////////////////////
+  async function onSubmit(data: RTBFFormValues) {
+    try {
+      setIsSubmitting(true);
+      
+      await submitRTBF(data);
+      
+      toast({
+        title: "Success!",
+        description: "Your request has been submitted successfully.",
+      });
+      
+      window.location.href = '/success';
+      
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'An error occurred while submitting your request',
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+
   const handleSendVerificationCode = async () => {
     try {
-      const response = await fetch('/api/request-email-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userEmail: form.getValues("email") }),
-      });
-
-      if (!response.ok) throw new Error('Failed to send verification code');
-
+      await requestEmailVerification(form.getValues("email"));
       setVerificationSent(true);
       toast({
         title: "Verification Code Sent",
         description: "Please check your email for the verification code.",
       });
     } catch (error) {
-        console.error(error)
+      console.error(error);
       toast({
         title: "Error",
         description: "Failed to send verification code. Please try again.",
@@ -176,24 +163,14 @@ export function RTBFForm() {
 
   const handleVerifyCode = async () => {
     try {
-      const response = await fetch('/api/verify-email-address', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userEmail: form.getValues("email"),
-          code: verificationCode
-        }),
-      });
-
-      if (!response.ok) throw new Error('Invalid verification code');
-
+      await verifyEmailCode(form.getValues("email"), verificationCode);
       setIsVerified(true);
       toast({
         title: "Email Verified",
         description: "Your email has been verified successfully.",
       });
     } catch (error) {
-      console.error(error)
+      console.error(error);
       toast({
         title: "Error",
         description: "Invalid verification code. Please try again.",
@@ -201,6 +178,7 @@ export function RTBFForm() {
       });
     }
   };
+
 
   const generateSummaryCard = (formData: RTBFFormValues) => {
     const selectedOrgs = formData.organisations;
