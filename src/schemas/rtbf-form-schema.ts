@@ -6,8 +6,8 @@ type EvidenceField = {
   required: boolean
 }
 
-export type Company = {
-  id: string
+export type OrganisationInput = {
+  slug: string
   label: string
   email: string
   evidenceFields: {
@@ -16,11 +16,11 @@ export type Company = {
 }
 
 
-export const companies = [
+export const organisations: OrganisationInput[] = [
   { 
-    id: "openai", 
+    slug: "openai", 
     label: "OpenAI (ChatGPT)", 
-    email: "privacy@openai.com",
+    email: "info@arkology.co.za", // TODO
     evidenceFields: {
       chatLinks: {
         label: "ChatGPT Chat Links",
@@ -30,25 +30,25 @@ export const companies = [
     }
   },
   { 
-    id: "anthropic", 
+    slug: "anthropic", 
     label: "Anthropic (Claude)", 
-    email: "-",
+    email: "info@arkology.co.za", // TODO
     evidenceFields: {
       chatLinks: {
         label: "Claude Chat Links",
-        placeholder: "https://claude.ai/...",
+        placeholder: "https://claude.ai/...", // TODO
         required: false
       }
     }
   },
   { 
-    id: "meta", 
+    slug: "meta", 
     label: "Meta (LLama)", 
-    email: "-",
+    email: "info@arkology.co.za", // TODO
     evidenceFields: {
       chatLinks: {
         label: "LLama Chat Links",
-        placeholder: "https://...",
+        placeholder: "https://...", // TODO
         required: false
       }
     }
@@ -59,17 +59,17 @@ export const reasons = [
   { 
     id: "personal_impact", 
     label: "Personal or Professional Impact",
-    tooltip: "Under GDPR Article 17, you can request erasure if the data is no longer necessary or if it significantly impacts your personal or professional life. This includes situations where outdated or irrelevant data affects your reputation or opportunities."
+    tooltip: "The data is no longer necessary or it significantly impacts your personal or professional life. This includes situations where outdated or irrelevant data affects your reputation or opportunities."
   },
   { 
     id: "unlawful_processing", 
     label: "Data Processing Was Unlawful",
-    tooltip: "Under GDPR Article 17, you have the right to erasure if your personal data has been processed without legal basis or consent. This includes data collected without proper authorization or used beyond its intended purpose."
+    tooltip: "Your personal data has been processed without legal basis or consent. This includes data collected without proper authorization or used beyond its intended purpose."
   },
   { 
     id: "inaccuracy", 
     label: "Inaccuracy or Misrepresentation",
-    tooltip: "Under GDPR Article 17, you have the right to erasure if your personal data is inaccurate or misrepresents you. This ensures that AI systems don't perpetuate or learn from incorrect information about you."
+    tooltip: "Your personal data is inaccurate or misrepresents you. This ensures that AI systems don't perpetuate or learn from incorrect information about you."
   },
 ] as const
 
@@ -83,7 +83,7 @@ const evidenceSchema = z.object({
 })
 
 export const rtbfFormSchema = z.object({
-  companies: z.array(z.string()).min(1, "Please select at least one company"),
+  organisations: z.array(z.string()).min(1, "Please select at least one company"),
   reasons: z.array(z.string()).min(1, "Please select at least one reason"),
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),

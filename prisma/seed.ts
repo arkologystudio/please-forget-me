@@ -1,22 +1,34 @@
 import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
-async function main() {
-  const existingOrg = await prisma.organisation.findUnique({
-    where: { slug: "openai" },
-  });
+import { organisations } from "./organisations";
 
-  if (existingOrg) {
-    console.log("Organisation already exists:", existingOrg);
-    return;
+const prisma = new PrismaClient();
+
+export type OrganisationDB = {
+  name: string;
+  email: string;
+  slug: string;
+};
+
+async function main() {
+  const createdOrgs = [];
+
+  for (const org of organisations) {
+    const existingOrg = await prisma.organisation.findUnique({
+      where: { slug: org.slug },
+    });
+
+    if (existingOrg) {
+      console.log(`Organisation ${org.name} already exists:`, existingOrg);
+      continue;
+    }
+
+    const createdOrg = await prisma.organisation.create({
+      data: org as OrganisationDB,
+    });
+    createdOrgs.push(createdOrg);
   }
-  const openai = await prisma.organisation.create({
-    data: {
-      name: "OpenAI",
-      email: "info@arkology.co.za", //TODO: Change this to a real email
-      slug: "openai",
-    },
-  });
-  console.log({ openai });
+
+  console.log("Created organisations:", createdOrgs);
 }
 main()
   .then(async () => {

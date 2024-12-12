@@ -15,11 +15,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
-  companies,
+  organisations,
   reasons,
   rtbfFormSchema,
   type RTBFFormValues,
-} from "@/lib/schemas/rtbf-form-schema";
+} from "@/schemas/rtbf-form-schema";
 import { Progress } from "@/components/ui/progress";
 import CountrySelect from "@/components/ui/country-select";
 import {
@@ -29,25 +29,43 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import {
-  generateLetters,
-  generatePreviewLetter,
-} from "@/lib/schemas/rtbf-letter-template";
+
 import { SignatureCanvas } from "@/components/ui/signature-pad";
+import { useToast } from "@/hooks/use-toast"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function RTBFForm() {
   const [step, setStep] = useState(1);
-  const TOTAL_STEPS = 4;
-  const [letterIndex, setLetterIndex] = useState(0);
+  const TOTAL_STEPS = 5;
   const [isSignatureConfirmed, setIsSignatureConfirmed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast()
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+  const [cardIndex, setCardIndex] = useState(0);
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 0));
 
+  const nextCard = () => {
+    const selectedOrgs = form.getValues("organisations");
+    setCardIndex((prev) => Math.min(prev + 1, selectedOrgs.length - 1));
+  };
+
+  const prevCard = () => {
+    setCardIndex((prev) => Math.max(prev - 1, 0));
+  };
+
   const form = useForm<RTBFFormValues>({
     resolver: zodResolver(rtbfFormSchema),
     defaultValues: {
-      companies: [],
+      organisations: [],
       reasons: [],
       firstName: "",
       lastName: "",
@@ -68,64 +86,164 @@ export function RTBFForm() {
 
   async function onSubmit(data: RTBFFormValues) {
     try {
-      const letters = generateLetters(data);
+      setIsSubmitting(true);
+      const response = await fetch('/api/submit-rtbf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-      console.log("Letters: ", letters);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit request');
+      }
 
-        const response = await fetch('/api/submit-rtbf', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            formData: letters,
-          }),
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to submit request')
-        }
-
-      // Handle success (e.g., show success message, redirect)
+      await response.json();
+      
+      toast({
+        title: "Success!",
+        description: "Your request has been submitted successfully.",
+      });
+      
+      window.location.href = '/success';
+      
     } catch (error) {
-      // Handle error (e.g., show error message)
       console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'An error occurred while submitting your request',
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
-  // Custom validation for step 1
+  // FORM STEPS VALIDATION
+
   const isStep1Valid = () => {
     const values = form.getValues();
-    return values.companies.length > 0 && values.reasons.length > 0;
+    return values.organisations.length > 0 && values.reasons.length > 0;
   };
 
-  // Add this validation function near isStep1Valid()
   const isStep2Valid = () => {
     const values = form.getValues();
-    // Check if at least one prompt is provided
     if (!values.prompts?.length) return false;
-
     return true;
   };
 
-  // Add this validation function near the other validation functions
   const isStep3Valid = () => {
     const values = form.getValues();
     return !!(
       values.firstName?.trim() &&
       values.lastName?.trim() &&
       values.email?.trim() &&
-      values.country?.trim() &&
       values.birthDate?.trim()
     );
   };
 
-  // Add this validation function
   const isStep4Valid = () => {
     const values = form.getValues();
     return !!(values.authorization && values.signature && isSignatureConfirmed);
   };
 
+  const handleSendVerificationCode = async () => {
+    try {
+      const response = await fetch('/api/request-email-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail: form.getValues("email") }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send verification code');
+
+      setVerificationSent(true);
+      toast({
+        title: "Verification Code Sent",
+        description: "Please check your email for the verification code.",
+      });
+    } catch (error) {
+        console.error(error)
+      toast({
+        title: "Error",
+        description: "Failed to send verification code. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    try {
+      const response = await fetch('/api/verify-email-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail: form.getValues("email"),
+          code: verificationCode
+        }),
+      });
+
+      if (!response.ok) throw new Error('Invalid verification code');
+
+      setIsVerified(true);
+      toast({
+        title: "Email Verified",
+        description: "Your email has been verified successfully.",
+      });
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "Error",
+        description: "Invalid verification code. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateSummaryCard = (formData: RTBFFormValues) => {
+    const selectedOrgs = formData.organisations;
+    if (selectedOrgs.length === 0) return null;
+
+    const org = selectedOrgs[cardIndex];
+    const orgDetails = organisations.find(o => o.slug === org);
+    
+    return (
+      <Card key={org} className="mb-4">
+        <CardHeader>
+          <CardTitle>{orgDetails?.label}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="font-medium">Request Type</p>
+              <p className="text-muted-foreground">Right to Be Forgotten</p>
+            </div>
+            <div>
+              <p className="font-medium">Est. Response Time</p>
+              <p className="text-muted-foreground">14-28 days</p>
+            </div>
+            <div>
+              <p className="font-medium">Prompts Provided</p>
+              <p className="text-muted-foreground">
+                {formData.prompts?.length || 0} prompt(s)
+              </p>
+            </div>
+            <div>
+              <p className="font-medium">Selected Reasons</p>
+              <p className="text-muted-foreground">
+                {formData.reasons.length} reason(s)
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+////////////
+// FORM 
+////////////
   return (
     <Form {...form}>
       <Progress
@@ -133,46 +251,67 @@ export function RTBFForm() {
         className="mb-6"
       />
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        
         {step === 1 && (
           <>
             <FormField
               control={form.control}
-              name="companies"
-              rules={{ required: "Please select at least one company" }}
+              name="organisations"
+              rules={{ required: "Please select at least one organisation" }}
               render={() => (
                 <FormItem>
                   <div className="space-y-4">
                     <FormLabel>Dear,</FormLabel>
                     <div className="space-y-2">
-                      {companies.map((company) => (
+        
+                      {organisations.map((organisation) => (
                         <FormField
-                          key={company.id}
+                          key={organisation.slug}
                           control={form.control}
-                          name="companies"
+                          name="organisations"
                           render={({ field }) => (
                             <FormItem className="flex items-center space-x-3">
                               <FormControl>
                                 <Checkbox
-                                  checked={field.value?.includes(company.id)}
+                                  checked={field.value?.includes(organisation.slug)}
                                   onCheckedChange={(checked) => {
                                     const value = field.value || [];
                                     return checked
-                                      ? field.onChange([...value, company.id])
+                                      ? field.onChange([...value, organisation.slug])
                                       : field.onChange(
                                           value.filter(
-                                            (val) => val !== company.id
+                                            (val) => val !== organisation.slug
                                           )
                                         );
                                   }}
                                 />
                               </FormControl>
                               <FormLabel className={""}>
-                                {company.label}
+                                {organisation.label}
                               </FormLabel>
                             </FormItem>
                           )}
                         />
                       ))}
+                       <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mb-2"
+                        onClick={() => {
+                          const allOrgs = organisations.map(org => org.slug);
+                          const currentValue = form.getValues("organisations");
+                          if (currentValue.length === organisations.length) {
+                            form.setValue("organisations", []);
+                          } else {
+                            form.setValue("organisations", allOrgs);
+                          }
+                        }}
+                      >
+                        {form.getValues("organisations").length === organisations.length 
+                          ? "Deselect All" 
+                          : "Select All"}
+                      </Button>
                     </div>
                     <p>I&apos;d like to be forgotten.</p>
 
@@ -266,7 +405,7 @@ export function RTBFForm() {
             <div className="space-y-4 border-b pb-4 mb-6">
               <h3 className="font-medium">System Interaction Details</h3>
               <p>
-                The following information helps companies identify and remove your personal data from their systems.
+                The following information assists organisations to identify and remove your personal data from their systems.
               </p>
               <FormField
                 control={form.control}
@@ -294,27 +433,27 @@ export function RTBFForm() {
             </div>
 
             <div className="space-y-4">
-              {form.watch("companies").map((companyId) => {
-                const company = companies.find((c) => c.id === companyId);
-                if (!company) return null;
+              {form.watch("organisations").map((organisationId) => {
+                const organisation = organisations.find((c) => c.slug === organisationId);
+                if (!organisation) return null;
 
                 return (
                   <div
-                    key={companyId}
+                    key={organisationId}
                     className="space-y-4 border-b pb-4 last:border-b-0"
                   >
                     <h3 className="font-medium">
-                      <b>{company.label} Evidence</b>
+                      <b>{organisation.label} Evidence</b>
                     </h3>
 
-                    {company.evidenceFields.chatLinks && (
+                    {organisation.evidenceFields.chatLinks && (
                       <FormField
                         control={form.control}
-                        name={`evidence.${companyId}.chatLinks`}
+                        name={`evidence.${organisationId}.chatLinks`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel htmlFor={`${company.id}-chatlinks`}>
-                              {company.evidenceFields.chatLinks.label}
+                            <FormLabel htmlFor={`${organisation.slug}-chatlinks`}>
+                              {organisation.evidenceFields.chatLinks?.label}
                             </FormLabel>
                             <div className="space-y-2">
                               {(!field.value?.length ? [""] : field.value).map(
@@ -322,9 +461,9 @@ export function RTBFForm() {
                                   <div key={index} className="flex gap-2">
                                     <FormControl>
                                       <Input
-                                        id={`${company.id}-chatlinks-${index}`}
+                                        id={`${organisation.slug}-chatlinks-${index}`}
                                         placeholder={
-                                          company.evidenceFields.chatLinks
+                                          organisation.evidenceFields.chatLinks
                                             ?.placeholder
                                         }
                                         value={link}
@@ -373,15 +512,15 @@ export function RTBFForm() {
 
                     <FormField
                       control={form.control}
-                      name={`evidence.${companyId}.additionalNotes`}
+                      name={`evidence.${organisationId}.additionalNotes`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel htmlFor={`${company.id}-additional-notes`}>
+                          <FormLabel htmlFor={`${organisation.slug}-additional-notes`}>
                             Additional Notes (Optional)
                           </FormLabel>
                           <FormControl>
                             <Input
-                              id={`${company.id}-additional-notes`}
+                              id={`${organisation.slug}-additional-notes`}
                               placeholder="Any additional context or information..."
                               value={field.value || ""}
                               onChange={field.onChange}
@@ -416,7 +555,7 @@ export function RTBFForm() {
             <div className="space-y-2">
               <h3 className="font-medium">Personal Information</h3>
               <p>
-                The following information is included in your Right to be Forgotten request to ensure companies can 1) identify you and 2) remove your personal data from their systems.
+                The following information is included in your Right to be Forgotten request to ensure organisations can 1) identify you and 2) remove your personal data from their systems.
               </p>
             </div>
 
@@ -469,17 +608,13 @@ export function RTBFForm() {
 
             <FormField
               control={form.control}
-              name="country"
-              rules={{ required: "Country is required" }}
+              name="birthDate"
+              rules={{ required: "Date of birth is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Country</FormLabel>
+                  <FormLabel>Date of Birth</FormLabel>
                   <FormControl>
-                    <CountrySelect
-                      onChange={field.onChange}
-                      className="w-full"
-                      placeholder="Select your country"
-                    />
+                    <Input {...field} type="date" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -488,13 +623,16 @@ export function RTBFForm() {
 
             <FormField
               control={form.control}
-              name="birthDate"
-              rules={{ required: "Date of birth is required" }}
+              name="country"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Date of Birth</FormLabel>
+                  <FormLabel>Country (Optional)</FormLabel>
                   <FormControl>
-                    <Input {...field} type="date" />
+                    <CountrySelect
+                      onChange={field.onChange}
+                      className="w-full"
+                      placeholder="Select your country"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -535,53 +673,32 @@ export function RTBFForm() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium">
-                  That&apos;s it! Please review the request(s) below and proceed to submission:
+                  Almost there! Please review your requests below:
                 </h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Request {cardIndex + 1} of {form.getValues("organisations").length}
+                </p>
               </div>
 
-              {(() => {
-                const preview = generatePreviewLetter(
-                  form.getValues(),
-                  letterIndex
-                );
+              {generateSummaryCard(form.getValues())}
 
-                return (
-                  <>
-                    <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-                      <div
-                        className="whitespace-pre-wrap font-mono text-sm"
-                        dangerouslySetInnerHTML={{
-                          __html: preview.body.replace(/\n/g, "<br/>"),
-                        }}
-                      />
-                    </div>
-
-                    {preview.total > 1 && (
-                      <div className="flex items-center justify-between gap-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setLetterIndex((i) => i - 1)}
-                          disabled={preview.currentIndex === 0}
-                        >
-                          Previous Letter
-                        </Button>
-                        <span className="text-sm text-muted-foreground">
-                          Letter {preview.currentIndex + 1} of {preview.total}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setLetterIndex((i) => i + 1)}
-                          disabled={preview.currentIndex === preview.total - 1}
-                        >
-                          Next Letter
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={prevCard}
+                  disabled={cardIndex === 0}
+                >
+                  Previous Request
+                </Button>
+                <Button
+                  type="button"
+                  onClick={nextCard}
+                  disabled={cardIndex === form.getValues("organisations").length - 1}
+                >
+                  Next Request
+                </Button>
+              </div>
 
               <FormField
                 control={form.control}
@@ -598,13 +715,7 @@ export function RTBFForm() {
                       <FormLabel>
                         I confirm that I am the individual whose data this
                         request concerns and I authorize <i>Please Forget Me</i>{" "}
-                        to submit this request on my behalf. Additionally, I
-                        have read and understood my rights under{" "}
-                        <a href="https://gdpr-info.eu/art-17-gdpr/">
-                          GDPR Article 17
-                        </a>
-                        , and I am requesting the erasure of my personal data.
-                      </FormLabel>
+                        to submit this request on my behalf.</FormLabel>
                     </div>
                   </FormItem>
                 )}
@@ -646,13 +757,82 @@ export function RTBFForm() {
                   type="submit"
                   className="flex-1"
                   disabled={!isStep4Valid()}
+                  onClick={nextStep}
                 >
-                  Submit Request
+                  Next
                 </Button>
               </div>
             </div>
           </>
         )}
+
+        {step === 5 && (
+        <>
+            <div className="space-y-6">
+            <div>
+                <h3 className="text-lg font-medium">
+                Let&apos;s verify your request to make sure it&apos;s you.
+                </h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                We&apos;ll send a verification code to {form.getValues("email")}
+                </p>
+            </div>
+
+            <div className="space-y-4">
+                {!verificationSent ? (
+                <Button
+                    type="button"
+                    onClick={handleSendVerificationCode}
+                >
+                    Send Verification Code
+                </Button>
+                ) : (
+                <div className="space-y-4">
+                    <FormField
+                    name="verificationCode"
+                    render={() => (
+                        <FormItem>
+                        <FormLabel>Verification Code</FormLabel>
+                        <FormControl>
+                            <Input 
+                            placeholder="Enter the code sent to your email"
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value)}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    
+                    <Button
+                    type="button"
+                    onClick={handleVerifyCode}
+                    disabled={!verificationCode}
+                    >
+                    Verify Code
+                    </Button>
+                </div>
+                )}
+            </div>
+            <div className="h-4" />
+            <div className="border-t border-border" />
+            <div className="flex space-x-2">
+                <Button type="button" variant="outline" onClick={prevStep}>
+                Back
+                </Button>
+                <Button
+                type="submit"
+                className="flex-1"
+                disabled={!isVerified || isSubmitting}
+                >
+                {isSubmitting ? "Submitting..." : "Submit"}
+                </Button>
+            </div>
+            </div>
+        </>
+        )}
+
       </form>
     </Form>
   );

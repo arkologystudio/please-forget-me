@@ -1,10 +1,15 @@
-import { RTBFFormValues } from "@/lib/schemas/rtbf-form-schema";
+import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
-import { sendInitialRequestEmail } from "../../../client/email/mailgun";
+import { sendDeliveryConfirmationEmail, sendRTBFMailRequest } from "../../../client/email/mailgun";
+import { generateLetters, LetterOutput } from "@/schemas/rtbf-letter-template";
+import { Organisation } from "../../../prisma/organisations";
+ 
 
 // Instantiate Prisma Client outside the handler to prevent multiple instances in serverless environments
 const prisma = new PrismaClient();
+
+type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
 
 export default async function handler(
   req: NextApiRequest,
@@ -17,61 +22,69 @@ export default async function handler(
 
   try {
     console.log("Received request body:", req.body);
-    const data: RTBFFormValues = req.body;
-
+    const formValues: RTBFFormValues = req.body;
     // Start a transaction to ensure atomicity
-    const result = await prisma.$transaction(async (prisma) => {
+    const result = await prisma.$transaction(async (tx: TransactionClient) => {
       // Upsert user: find by identifier or create if not exists
-      const user = await prisma.user.upsert({
-        where: { identifier: data.email },
+      const user = await tx.user.upsert({
+        where: { identifier: formValues.email },
         update: {},
         create: {
-          identifier: data.email,
-          email: data.email,
+          identifier: formValues.email,
+          email: formValues.email,
         },
       });
 
       console.log("User upserted with ID:", user.id);
 
-      // Fetch organisations based on company slugs
-      const organisations = await prisma.organisation.findMany({
+      // Fetch organisations based on organisation slugs
+      const organisationsDB = await tx.organisation.findMany({
         where: {
           slug: {
-            in: data.companies,
+            in: formValues.organisations,
           },
         },
-      });
-      const test = await prisma.organisation.findMany();
+      }) as Organisation[];
+      const test = await tx.organisation.findMany();
       console.log("Test:", test);
-      console.log("Organisations:", organisations);
+      console.log("Organisations in DB:", organisationsDB);
 
-      if (organisations.length !== data.companies.length) {
-        const foundSlugs = organisations.map((org) => org.slug);
-        const notFound = data.companies.filter(
-          (slug) => !foundSlugs.includes(slug)
-        );
-        console.error("Organisations not found:", notFound);
-        throw new Error(`Organisations not found: ${notFound.join(", ")}`);
-      }
+      // if (organisationsDB.length !== formValues.organisations.length) {
+      //   const foundSlugs = organisationsDB.map((org: Organisation) => org.slug);
+      //   const notFound = formValues.organisations.filter(
+      //     (slug) => !foundSlugs.includes(slug)
+      //   );
+      //   console.error("Organisations not found:", notFound);
+      //   throw new Error(`Organisations not found: ${notFound.join(", ")}`);
+      // }
+
+      const targetOrganisations = organisationsDB.filter((org: Organisation) => formValues.organisations.includes(org.slug));
 
       // Create a form submission linked to the user
-      const formSubmission = await prisma.formSubmission.create({
+      const formSubmission = await tx.formSubmission.create({
         data: {
           userId: user.id,
-          data: data,
+          data: formValues,
         },
       });
 
       console.log("Form submission created with ID:", formSubmission.id);
 
+      const letters = generateLetters(formValues); // Generate letter content for each request
+
       // Prepare to send emails and create threads
-      const emailPromises = organisations.map(async (org) => {
-        const emailContent = await sendInitialRequestEmail(org, data);
+      const emailPromises = targetOrganisations.map(async (org: Organisation) => {
+        const letter = letters.find((letter: LetterOutput) => letter.to === org.email);
+        if (!letter) {
+          throw new Error(`Letter not found for organisation: ${org.name}`);
+        }
+        
+        const emailContent = await sendRTBFMailRequest(letter, formValues);
         if (!emailContent.message || !emailContent.id) {
           throw new Error("Email content is undefined");
         }
 
-        const thread = await prisma.thread.create({
+        const thread = await tx.thread.create({
           data: {
             userId: user.id,
             organisationId: org.id,
@@ -79,7 +92,7 @@ export default async function handler(
           },
         });
 
-        const emailRecord = await prisma.email.create({
+        const emailRecord = await tx.email.create({
           data: {
             threadId: thread.id,
             sender: "user",
@@ -131,7 +144,7 @@ export default async function handler(
       throw new Error("User not found. Cannot send thread confirmation email.");
     }
 
-    // await sendDeliveryConfirmationEmail(fetchedUser);
+    await sendDeliveryConfirmationEmail(fetchedUser);
 
     res.status(200).json({ message: "Request submitted successfully" });
   } catch (error: Error | unknown) {
