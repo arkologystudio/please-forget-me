@@ -33,11 +33,6 @@ import { InfoCircledIcon } from "@radix-ui/react-icons";
 // import { SignatureCanvas } from "@/components/ui/signature-pad";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  requestEmailVerification,
-  verifyEmailCode,
-} from "@/app/actions/email-verification";
-import { submitRTBF } from "@/app/actions/submit-rtbf";
 
 export function RTBFForm() {
   const [step, setStep] = useState(1);
@@ -119,7 +114,17 @@ export function RTBFForm() {
     try {
       setIsSubmitting(true);
 
-      await submitRTBF(data);
+      const response = await fetch("/api/submit-rtbf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit request");
+      }
 
       toast({
         title: "Success!",
@@ -144,7 +149,18 @@ export function RTBFForm() {
 
   const handleSendVerificationCode = async () => {
     try {
-      await requestEmailVerification(form.getValues("email"));
+      const response = await fetch("/api/request-email-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userEmail: form.getValues("email") }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send verification code");
+      }
+
       setVerificationSent(true);
       toast({
         title: "Verification Code Sent",
@@ -162,7 +178,21 @@ export function RTBFForm() {
 
   const handleVerifyCode = async () => {
     try {
-      await verifyEmailCode(form.getValues("email"), verificationCode);
+      const response = await fetch("/api/verify-email-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userEmail: form.getValues("email"),
+          code: verificationCode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid verification code");
+      }
+
       setIsVerified(true);
       toast({
         title: "Email Verified",
