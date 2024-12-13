@@ -190,6 +190,7 @@ export function RTBFForm() {
       });
 
       if (!response.ok) {
+        console.error("Error verifying email code:", response);
         throw new Error("Invalid verification code");
       }
 
