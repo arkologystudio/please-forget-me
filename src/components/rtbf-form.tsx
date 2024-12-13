@@ -121,7 +121,17 @@ export function RTBFForm() {
     try {
       setIsSubmitting(true);
       
-      await submitRTBF(data);
+      const response = await fetch('/api/submit-rtbf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit request');
+      }
       
       toast({
         title: "Success!",
@@ -145,7 +155,18 @@ export function RTBFForm() {
 
   const handleSendVerificationCode = async () => {
     try {
-      await requestEmailVerification(form.getValues("email"));
+      const response = await fetch('/api/request-email-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userEmail: form.getValues("email") }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send verification code');
+      }
+
       setVerificationSent(true);
       toast({
         title: "Verification Code Sent",
@@ -163,7 +184,21 @@ export function RTBFForm() {
 
   const handleVerifyCode = async () => {
     try {
-      await verifyEmailCode(form.getValues("email"), verificationCode);
+      const response = await fetch('/api/verify-email-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userEmail: form.getValues("email"),
+          code: verificationCode
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid verification code');
+      }
+
       setIsVerified(true);
       toast({
         title: "Email Verified",
