@@ -111,7 +111,7 @@ export function RTBFForm() {
 
   const isStep4Valid = () => {
     const values = form.getValues();
-    return !!(values.authorization && values.signature && isSignatureConfirmed);
+    return !!(values.authorization);
   };
 
   //////////////////////////////
@@ -224,10 +224,21 @@ export function RTBFForm() {
 ////////////
   return (
     <Form {...form}>
-      <Progress
-        value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
-        className="mb-6"
-      />
+      {step === 1 ? (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">Right To Be Forgotten</h2>
+          <p className="text-muted-foreground">
+            This request, if successful, ensures that AI Language Models refrain from answering questions or revealing personal information about you.
+          </p>
+          <div className="h-px bg-border mt-6" />
+        </div>
+      ) : (
+        <Progress
+          value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
+          className="mb-6 animate-in fade-in duration-500"
+        />
+      )}
+
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         
         {step === 1 && (
@@ -291,8 +302,6 @@ export function RTBFForm() {
                           : "Select All"}
                       </Button>
                     </div>
-                    <p>I&apos;d like to be forgotten.</p>
-
                     <div className="space-y-4">
                       <p>
                         Please remove my personal data from your systems, for
@@ -395,7 +404,7 @@ export function RTBFForm() {
                     <FormControl>
                       <Input
                         id="prompts"
-                        placeholder="Prompts that reveal your personal data (e.g., 'Where does <full name> live?')"
+                        placeholder="Prompts that reveal your personal data (e.g., 'Where does Joe Shmoe live?')"
                         value={field.value?.[field.value.length - 1] || ""}
                         onChange={(e) => {
                           const newValue = e.target.value;
@@ -418,96 +427,115 @@ export function RTBFForm() {
                 return (
                   <div
                     key={organisationId}
-                    className="space-y-4 border-b pb-4 last:border-b-0"
+                    className="border rounded-lg"
                   >
-                    <h3 className="font-medium">
-                      <b>{organisation.label} Evidence</b>
-                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const element = document.getElementById(`org-content-${organisationId}`);
+                        element?.classList.toggle('hidden');
+                      }}
+                      className="w-full px-4 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors rounded-lg"
+                    >
+                      <h3 className="font-medium">
+                        {organisation.label} Evidence
+                      </h3>
+                      <svg 
+                        className="w-5 h-5 text-slate-500"
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
 
-                    {organisation.evidenceFields.chatLinks && (
+                    <div id={`org-content-${organisationId}`} className="hidden px-4 py-3 space-y-4 border-t">
+                      {organisation.evidenceFields.chatLinks && (
+                        <FormField
+                          control={form.control}
+                          name={`evidence.${organisationId}.chatLinks`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel htmlFor={`${organisation.slug}-chatlinks`}>
+                                {organisation.evidenceFields.chatLinks?.label}
+                              </FormLabel>
+                              <div className="space-y-2">
+                                {(!field.value?.length ? [""] : field.value).map(
+                                  (link, index) => (
+                                    <div key={index} className="flex gap-2">
+                                      <FormControl>
+                                        <Input
+                                          id={`${organisation.slug}-chatlinks-${index}`}
+                                          placeholder={
+                                            organisation.evidenceFields.chatLinks
+                                              ?.placeholder
+                                          }
+                                          value={link}
+                                          onChange={(e) => {
+                                            const newLinks = [
+                                              ...(field.value || []),
+                                            ];
+                                            newLinks[index] = e.target.value;
+                                            field.onChange(newLinks);
+                                          }}
+                                        />
+                                      </FormControl>
+                                      {(field.value || []).length > 1 && (
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
+                                          onClick={() => {
+                                            const newLinks =
+                                              field.value?.filter(
+                                                (_, i) => i !== index
+                                              ) || [];
+                                            field.onChange(newLinks);
+                                          }}
+                                        >
+                                          ✕
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )
+                                )}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    field.onChange([...(field.value || []), ""]);
+                                  }}
+                                >
+                                  Add Another Link
+                                </Button>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
                       <FormField
                         control={form.control}
-                        name={`evidence.${organisationId}.chatLinks`}
+                        name={`evidence.${organisationId}.additionalNotes`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel htmlFor={`${organisation.slug}-chatlinks`}>
-                              {organisation.evidenceFields.chatLinks?.label}
+                            <FormLabel htmlFor={`${organisation.slug}-additional-notes`}>
+                              Additional Notes (Optional)
                             </FormLabel>
-                            <div className="space-y-2">
-                              {(!field.value?.length ? [""] : field.value).map(
-                                (link, index) => (
-                                  <div key={index} className="flex gap-2">
-                                    <FormControl>
-                                      <Input
-                                        id={`${organisation.slug}-chatlinks-${index}`}
-                                        placeholder={
-                                          organisation.evidenceFields.chatLinks
-                                            ?.placeholder
-                                        }
-                                        value={link}
-                                        onChange={(e) => {
-                                          const newLinks = [
-                                            ...(field.value || []),
-                                          ];
-                                          newLinks[index] = e.target.value;
-                                          field.onChange(newLinks);
-                                        }}
-                                      />
-                                    </FormControl>
-                                    {(field.value || []).length > 1 && (
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => {
-                                          const newLinks =
-                                            field.value?.filter(
-                                              (_, i) => i !== index
-                                            ) || [];
-                                          field.onChange(newLinks);
-                                        }}
-                                      >
-                                        ✕
-                                      </Button>
-                                    )}
-                                  </div>
-                                )
-                              )}
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => {
-                                  field.onChange([...(field.value || []), ""]);
-                                }}
-                              >
-                                Add Another Link
-                              </Button>
-                            </div>
+                            <FormControl>
+                              <Input
+                                id={`${organisation.slug}-additional-notes`}
+                                placeholder="Any additional context or information..."
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
-                    )}
-
-                    <FormField
-                      control={form.control}
-                      name={`evidence.${organisationId}.additionalNotes`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel htmlFor={`${organisation.slug}-additional-notes`}>
-                            Additional Notes (Optional)
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              id={`${organisation.slug}-additional-notes`}
-                              placeholder="Any additional context or information..."
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    </div>
                   </div>
                 );
               })}
@@ -648,7 +676,7 @@ export function RTBFForm() {
 
         {step === 4 && (
           <>
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
                 <h3 className="text-lg font-medium">
                   Almost there! Please review your requests below:
@@ -699,7 +727,7 @@ export function RTBFForm() {
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="signature"
                 render={({ field }) => (
@@ -725,8 +753,7 @@ export function RTBFForm() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-
+              /> */}
               <div className="flex space-x-2">
                 <Button type="button" variant="outline" onClick={prevStep}>
                   Back
