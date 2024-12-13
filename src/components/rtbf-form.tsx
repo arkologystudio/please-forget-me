@@ -178,7 +178,7 @@ export function RTBFForm() {
 
   const handleVerifyCode = async () => {
     try {
-      const response = await fetch("/api/verify-email-code", {
+      const response = await fetch("/api/verify-email-address", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
