@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 import getRawBody from "raw-body";
-import qs from "qs";
+// import qs from "qs";
 import { PrismaClient } from "@prisma/client";
 import { MailgunEventData, MailgunWebhookSignature } from "@/types/mailgun";
 import { sendDeliveryConfirmationEmail } from "../../../../client/email/mailgun";
@@ -30,7 +30,7 @@ export default async function handler(
     });
 
     // Parse the raw body using qs
-    const parsed = qs.parse(raw);
+    const parsed = JSON.parse(raw);
     console.log("Parsed webhook payload:", parsed);
 
     // Extract and validate the signature using the Mailgun Interfaces type
