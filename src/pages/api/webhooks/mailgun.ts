@@ -68,8 +68,8 @@ export default async function handler(
 
     // Handle specific events
     switch (event.event) {
-      case "queued":
-        await handleQueued(event);
+      case "accepted":
+        await handleAccepted(event);
         break;
       case "delivered":
         await handleDelivered(event);
@@ -106,8 +106,8 @@ function verifySignature(
   return expectedSignature === signature;
 }
 
-// Handler for 'queued' event
-async function handleQueued(event: MailgunEventData) {
+// Handler for 'accpted' event
+async function handleAccepted(event: MailgunEventData) {
   const prisma = new PrismaClient();
 
   const messageId = event["message"].headers["message-id"];
@@ -122,13 +122,13 @@ async function handleQueued(event: MailgunEventData) {
     }
     await prisma.email.update({
       where: { mailgunId: messageId },
-      data: { status: "queued" },
+      data: { status: "accepted" },
     });
 
-    console.log(`Email queued: ${messageId}`);
+    console.log(`Email accepted: ${messageId}`);
   } catch (error) {
     console.error(
-      `Failed to handle queued event for Message-Id ${messageId}:`,
+      `Failed to handle accepted event for Message-Id ${messageId}:`,
       error
     );
   }
