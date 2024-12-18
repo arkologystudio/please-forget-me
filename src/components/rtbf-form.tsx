@@ -835,7 +835,7 @@ export function RTBFForm() {
                   Back
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
                   className="flex-1"
                   disabled={!isStep4Valid()}
                   onClick={nextStep}
