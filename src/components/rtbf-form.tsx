@@ -33,6 +33,7 @@ import { InfoCircledIcon } from "@radix-ui/react-icons";
 // import { SignatureCanvas } from "@/components/ui/signature-pad";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { submitRTBF } from "@/app/actions/submit-rtbf";
 
 export function RTBFForm() {
   const [step, setStep] = useState(1);
@@ -114,15 +115,16 @@ export function RTBFForm() {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch("/api/submit-rtbf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      // const response = await fetch("/api/submit-rtbf", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(data),
+      // });
+      const response = await submitRTBF(data);
 
-      if (!response.ok) {
+      if (!response.success) {
         throw new Error("Failed to submit request");
       }
 
