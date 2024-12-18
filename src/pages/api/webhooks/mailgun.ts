@@ -31,6 +31,7 @@ export default async function handler(
 
     // Parse the raw body using qs
     const parsed = qs.parse(raw);
+    console.log("Parsed webhook payload:", parsed);
 
     // Extract and validate the signature using the Mailgun Interfaces type
     const signature = parsed["signature"] as
