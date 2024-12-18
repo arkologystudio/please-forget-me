@@ -93,6 +93,9 @@ export async function submitRTBF(formValues: RTBFFormValues) {
             },
           });
 
+          console.log(
+            `Email record created with Mailgun ID: ${emailContent.id}`
+          );
           return { thread, email: emailRecord };
         }
       );
