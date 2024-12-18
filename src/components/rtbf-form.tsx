@@ -115,14 +115,9 @@ export function RTBFForm() {
     try {
       setIsSubmitting(true);
 
-      // const response = await fetch("/api/submit-rtbf", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(data),
-      // });
+      console.log("Submitting RTBF form data:", data);
       const response = await submitRTBF(data);
+      console.log("Response from submitRTBF:", response);
 
       if (!response.success) {
         throw new Error("Failed to submit request");
