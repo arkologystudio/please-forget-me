@@ -84,28 +84,44 @@ export function RTBFForm() {
   //////////////////////////////
   const isStep1Valid = () => {
     const values = form.getValues();
-    return values.organisations.length > 0 && values.reasons.length > 0;
+    const isValid =
+      values.organisations.length > 0 && values.reasons.length > 0;
+    if (!isValid) {
+      console.log("Step 1 is not valid:", values);
+    }
+    return isValid;
   };
 
   const isStep2Valid = () => {
     const values = form.getValues();
-    if (!values.prompts?.length) return false;
-    return true;
+    const isValid = (values.prompts?.length ?? 0) > 0;
+    if (!isValid) {
+      console.log("Step 2 is not valid:", values);
+    }
+    return isValid;
   };
 
   const isStep3Valid = () => {
     const values = form.getValues();
-    return !!(
+    const isValid = !!(
       values.firstName?.trim() &&
       values.lastName?.trim() &&
       values.email?.trim() &&
       values.birthDate?.trim()
     );
+    if (!isValid) {
+      console.log("Step 3 is not valid:", values);
+    }
+    return isValid;
   };
 
   const isStep4Valid = () => {
     const values = form.getValues();
-    return !!values.authorization;
+    const isValid = !!values.authorization;
+    if (!isValid) {
+      console.log("Step 4 is not valid:", values);
+    }
+    return isValid;
   };
 
   //////////////////////////////
