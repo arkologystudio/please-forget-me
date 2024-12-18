@@ -891,6 +891,7 @@ export function RTBFForm() {
                   className="flex-1"
                   disabled={!isVerified || isSubmitting}
                 >
+                  {isVerified ? "Email Verified" : "Email Not Yet Verified"}
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
               </div>
