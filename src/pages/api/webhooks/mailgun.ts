@@ -92,9 +92,11 @@ function verifySignature(
   token: string,
   signature: string
 ): boolean {
-  const apiKey = process.env.MAILGUN_API_KEY || "";
+  const apiKey = process.env.MAILGUN_WEBHOOK_SIGNING_KEY || "";
   if (!apiKey) {
-    console.error("MAILGUN_API_KEY is not set in the environment variables.");
+    console.error(
+      "MAILGUN_WEBHOOK_SIGNING_KEY is not set in the environment variables."
+    );
     return false;
   }
 
