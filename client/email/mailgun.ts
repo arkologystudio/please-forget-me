@@ -1,15 +1,13 @@
 import formData from "form-data";
 import Mailgun, { MailgunMessageData } from "mailgun.js";
 
-import { Organisation, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
 
-import { generateLetters, LetterOutput } from "@/schemas/rtbf-letter-template";
-import { IMailgunClient } from "mailgun.js/Interfaces";
+import { LetterOutput } from "@/schemas/rtbf-letter-template";
 const DOMAIN = process.env.MAILGUN_DOMAIN || "";
 const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
-
 
 export const sendRTBFMailRequest = async (
   letter: LetterOutput,
@@ -26,7 +24,6 @@ export const sendRTBFMailRequest = async (
     DOMAIN: DOMAIN ? "set" : "not set",
   });
   try {
-    
     const mailData: MailgunMessageData = {
       from: `Citizen of the Internet <${formValues.email}>`,
       to: letter.to,
@@ -39,7 +36,6 @@ export const sendRTBFMailRequest = async (
     const body = await mg.messages.create(DOMAIN, mailData);
     console.log("Email sent:", body);
     return body;
-
   } catch (error) {
     console.error("Error sending initial request email:", error);
     throw error;

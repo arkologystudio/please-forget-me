@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 import getRawBody from "raw-body";
-import qs from "qs";
+// import qs from "qs";
 import { PrismaClient } from "@prisma/client";
 import { MailgunEventData, MailgunWebhookSignature } from "@/types/mailgun";
 import { sendDeliveryConfirmationEmail } from "../../../../client/email/mailgun";
@@ -30,7 +30,8 @@ export default async function handler(
     });
 
     // Parse the raw body using qs
-    const parsed = qs.parse(raw);
+    const parsed = JSON.parse(raw);
+    console.log("Parsed webhook payload:", parsed);
 
     // Extract and validate the signature using the Mailgun Interfaces type
     const signature = parsed["signature"] as
@@ -67,8 +68,8 @@ export default async function handler(
 
     // Handle specific events
     switch (event.event) {
-      case "queued":
-        await handleQueued(event);
+      case "accepted":
+        await handleAccepted(event);
         break;
       case "delivered":
         await handleDelivered(event);
@@ -91,9 +92,11 @@ function verifySignature(
   token: string,
   signature: string
 ): boolean {
-  const apiKey = process.env.MAILGUN_API_KEY || "";
+  const apiKey = process.env.MAILGUN_WEBHOOK_SIGNING_KEY || "";
   if (!apiKey) {
-    console.error("MAILGUN_API_KEY is not set in the environment variables.");
+    console.error(
+      "MAILGUN_WEBHOOK_SIGNING_KEY is not set in the environment variables."
+    );
     return false;
   }
 
@@ -103,8 +106,8 @@ function verifySignature(
   return expectedSignature === signature;
 }
 
-// Handler for 'queued' event
-async function handleQueued(event: MailgunEventData) {
+// Handler for 'accpted' event
+async function handleAccepted(event: MailgunEventData) {
   const prisma = new PrismaClient();
 
   const messageId = event["message"].headers["message-id"];
@@ -119,13 +122,13 @@ async function handleQueued(event: MailgunEventData) {
     }
     await prisma.email.update({
       where: { mailgunId: messageId },
-      data: { status: "queued" },
+      data: { status: "accepted" },
     });
 
-    console.log(`Email queued: ${messageId}`);
+    console.log(`Email accepted: ${messageId}`);
   } catch (error) {
     console.error(
-      `Failed to handle queued event for Message-Id ${messageId}:`,
+      `Failed to handle accepted event for Message-Id ${messageId}:`,
       error
     );
   }
