@@ -4,11 +4,9 @@ import { organisations } from "./organisations";
 const prisma = new PrismaClient();
 
 export type OrganisationDB = {
-  id: number;
   name: string;
   email: string;
   slug: string;
-  id?: number;
 };
 
 async function main() {
