@@ -769,6 +769,7 @@ export function RTBFForm() {
                 <Button
                   type="button"
                   onClick={nextCard}
+                  disabled={cardIndex === form.getValues("organisations").length - 1}
                 >
                   Next Request
                 </Button>
@@ -785,9 +786,7 @@ export function RTBFForm() {
                         onCheckedChange={(checked) => {
                           field.onChange(checked === true);
                         }}
-                        disabled={
-                          !isStep4Valid()
-                        }
+        
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
@@ -835,7 +834,7 @@ export function RTBFForm() {
                 <Button
                   type="submit"
                   className="flex-1"
-                  disabled={!isVerified || isSubmitting}
+                  disabled={!isVerified || !isStep4Valid()}
                   onClick={() => {
                     console.log("Submit button clicked", {
                       isVerified,
