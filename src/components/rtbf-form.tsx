@@ -281,7 +281,7 @@ export function RTBFForm() {
         />
       )}
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form className="space-y-8">
         {step === 1 && (
           <>
             <FormField
@@ -907,6 +907,7 @@ export function RTBFForm() {
                       isSubmitting,
                       formState: form.formState
                     });
+                    onSubmit(form.getValues());
                   }}
                 >
                   {isSubmitting ? "Submitting..." : "Submit"}
