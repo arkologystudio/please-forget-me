@@ -103,17 +103,13 @@ export const rtbfFormSchema = z.object({
       
       return currentAge >= 18;
     }, "You must be at least 18 years old to submit this request."),
-  country: z.string().min(2, "Please select a country"),
+  country: z.string().optional(),
   email: z.string().email("Please enter a valid email"),
   // Common field for all LLM interactions
-  prompts: z.array(z.string()).optional(),
-  evidence: z.record(z.string(), evidenceSchema),
+  prompts: z.array(z.string()).min(1, "At least one prompt is required"),
+  evidence: z.record(z.string(), evidenceSchema).optional(),
   authorization: z.boolean().refine(val => val === true, { message: "You must authorize the request" }),
-  signature: z.string()
-    .min(22, "Please provide a valid signature")
-    .refine((val) => val.startsWith('data:image'), {
-      message: "Invalid signature format"
-    }),
+  signature: z.string().optional(),
 })
 
 export type RTBFFormValues = z.infer<typeof rtbfFormSchema> 

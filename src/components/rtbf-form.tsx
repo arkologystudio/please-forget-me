@@ -70,13 +70,8 @@ export function RTBFForm() {
       country: "",
       birthDate: "",
       prompts: [],
-      evidence: {
-        openai: { chatLinks: [] },
-        anthropic: { chatLinks: [] },
-        meta: { chatLinks: [] },
-      },
+      evidence: {},
       authorization: false,
-      signature: "",
     },
     mode: "onChange",
   });
@@ -832,12 +827,11 @@ export function RTBFForm() {
                   Back
                 </Button>
                 <Button
-                  type="button"
+                  type="submit"
                   className="flex-1"
-                  disabled={!isStep4Valid()}
-                  onClick={nextStep}
+                  disabled={!isVerified || isSubmitting}
                 >
-                 Next
+                  {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
               </div>
             </div>
@@ -902,8 +896,7 @@ export function RTBFForm() {
                 <Button
                   type="submit"
                   className="flex-1"
-                  disabled={!isVerified || isSubmitting || !form.formState.isValid}
-
+                  disabled={!isVerified || isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>

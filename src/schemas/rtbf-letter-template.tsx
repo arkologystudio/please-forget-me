@@ -12,7 +12,7 @@ function generateLetter(
   organisation: OrganisationInput,
   selectedReasons: (typeof reasons)[number][]
 ): LetterOutput {
-  const organisationEvidence = data.evidence[organisation.slug]
+  const organisationEvidence = data.evidence?.[organisation.slug]
   
   const signatureHtml = data.signature ? 
     `\n<img src="${data.signature}" alt="Signature" style="max-width: 400px; height: auto;" />\n` : 
