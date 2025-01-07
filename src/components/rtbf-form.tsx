@@ -827,11 +827,12 @@ export function RTBFForm() {
                   Back
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
                   className="flex-1"
-                  disabled={!isVerified || isSubmitting}
+                  disabled={!isStep4Valid()}
+                  onClick={nextStep}
                 >
-                  {isSubmitting ? "Submitting..." : "Submit"}
+                  Next
                 </Button>
               </div>
             </div>
