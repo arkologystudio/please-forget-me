@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import { PrismaClient } from "@prisma/client";
 import { sendVerificationEmail } from "../../../client/email/mailgun";
@@ -9,17 +9,24 @@ type VerificationResult = {
   error?: string;
 };
 
-export const requestEmailVerification = async (email: string): Promise<VerificationResult> => {
+export const requestEmailVerification = async (
+  email: string
+): Promise<VerificationResult> => {
   const prisma = new PrismaClient();
 
   try {
+    let user;
     // Lookup the user by email
-    const user = await prisma.user.findUnique({
+    const maybeUser = await prisma.user.findUnique({
       where: { email: email },
     });
 
-    if (!user) {
-      throw new Error("User not found.");
+    if (!maybeUser) {
+      user = await prisma.user.create({
+        data: { email: email, identifier: email },
+      });
+    } else {
+      user = maybeUser;
     }
 
     // Generate code and expiration
@@ -40,15 +47,19 @@ export const requestEmailVerification = async (email: string): Promise<Verificat
 
     return { success: true };
   } catch (error) {
-    console.error('Error in email verification:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred'
+    console.error("Error in email verification:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 };
 
-export const verifyEmailCode = async (email: string, code: string): Promise<VerificationResult> => {
+export const verifyEmailCode = async (
+  email: string,
+  code: string
+): Promise<VerificationResult> => {
   const prisma = new PrismaClient();
 
   try {
@@ -88,10 +99,11 @@ export const verifyEmailCode = async (email: string, code: string): Promise<Veri
 
     return { success: true };
   } catch (error) {
-    console.error('Error in email verification:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred'
+    console.error("Error in email verification:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
-}; 
+};
