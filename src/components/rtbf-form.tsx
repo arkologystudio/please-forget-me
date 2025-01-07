@@ -783,10 +783,8 @@ export function RTBFForm() {
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => {
-                          field.onChange(checked === true);
-                        }}
-        
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                        required
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
@@ -832,18 +830,12 @@ export function RTBFForm() {
                   Back
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
                   className="flex-1"
-                  disabled={!isVerified || !isStep4Valid()}
-                  onClick={() => {
-                    console.log("Submit button clicked", {
-                      isVerified,
-                      isSubmitting,
-                      formState: form.formState
-                    });
-                  }}
+                  disabled={!isStep4Valid()}
+                  onClick={nextStep}
                 >
-                  {isSubmitting ? "Submitting..." : "Submit"}
+                  Next
                 </Button>
               </div>
             </div>
