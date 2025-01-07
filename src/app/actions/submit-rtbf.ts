@@ -17,7 +17,13 @@ type TransactionClient = Omit<
   "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
 >;
 
-export async function submitRTBF(formValues: RTBFFormValues) {
+type SubmitResult = {
+  success: boolean;
+  error?: string;
+  message?: string;
+};
+
+export const submitRTBF = async (formValues: RTBFFormValues): Promise<SubmitResult> => {
   try {
     console.log("Starting transaction for RTBF submission");
 
@@ -139,9 +145,12 @@ export async function submitRTBF(formValues: RTBFFormValues) {
     } catch (logError) {
       console.error("Failed to log initiation attempt:", logError);
     }
-    throw error;
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "An unknown error occurred" 
+    };
   } finally {
     console.log("Disconnecting Prisma client");
     await prisma.$disconnect();
   }
-}
+};

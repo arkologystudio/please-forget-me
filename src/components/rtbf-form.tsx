@@ -116,44 +116,52 @@ export function RTBFForm() {
     return isValid;
   };
 
-  const isStep4Valid = () => {
-    const values = form.getValues();
-    const isValid = !!values.authorization;
-    if (!isValid) {
-      console.log("Step 4 is not valid:", values);
-    }
-    return isValid;
-  };
+  // const isStep4Valid = () => {
+  //   const values = form.getValues();
+  //   const isValid = !!values.authorization;
+  //   if (!isValid) {
+  //     console.log("Step 4 is not valid:", values);
+  //   }
+  //   return isValid;
+  // };
 
   //////////////////////////////
   // FORM SUBMISSION
   //////////////////////////////
   async function onSubmit(data: RTBFFormValues) {
+    console.log("Form submission started", { data, isValid: form.formState.isValid });
     try {
       setIsSubmitting(true);
+      
+      if (!isVerified) {
+        console.log("Submission blocked: Email not verified");
+        toast({
+          title: "Error",
+          description: "Please verify your email before submitting",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      console.log("Submitting RTBF form data:", data);
+      console.log("Calling submitRTBF...");
       const response = await submitRTBF(data);
-      console.log("Response from submitRTBF:", response);
+      console.log("submitRTBF response:", response);
 
       if (!response.success) {
-        throw new Error("Failed to submit request");
+        throw new Error(response.error || "Failed to submit request");
       }
 
       toast({
         title: "Success!",
         description: "Your request has been submitted successfully.",
       });
-
-      window.location.href = "/success";
+      
+      window.location.href = '/success';
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while submitting your request",
+        description: error instanceof Error ? error.message : 'An error occurred while submitting your request',
         variant: "destructive",
       });
     } finally {
@@ -822,12 +830,18 @@ export function RTBFForm() {
                   Back
                 </Button>
                 <Button
-                  type="button"
+                  type="submit"
                   className="flex-1"
-                  disabled={!isStep4Valid()}
-                  onClick={nextStep}
+                  disabled={!isVerified || isSubmitting}
+                  onClick={() => {
+                    console.log("Submit button clicked", {
+                      isVerified,
+                      isSubmitting,
+                      formState: form.formState
+                    });
+                  }}
                 >
-                  Next
+                  {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
               </div>
             </div>
@@ -893,6 +907,13 @@ export function RTBFForm() {
                   type="submit"
                   className="flex-1"
                   disabled={!isVerified || isSubmitting}
+                  onClick={() => {
+                    console.log("Submit button clicked", {
+                      isVerified,
+                      isSubmitting,
+                      formState: form.formState
+                    });
+                  }}
                 >
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
