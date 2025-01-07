@@ -133,6 +133,8 @@ export function RTBFForm() {
     console.log("Form submission started", { data, isValid: form.formState.isValid });
     try {
       setIsSubmitting(true);
+      // Add artificial delay for UX
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       if (!isVerified) {
         console.log("Submission blocked: Email not verified");
@@ -833,6 +835,7 @@ export function RTBFForm() {
                   type="button"
                   className="flex-1"
                   disabled={!isStep4Valid()}
+                  onClick={nextStep}
                 >
                  Next
                 </Button>
