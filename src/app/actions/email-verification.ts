@@ -4,13 +4,18 @@ import { PrismaClient } from "@prisma/client";
 import { sendVerificationEmail } from "../../../client/email/mailgun";
 import { generateVerificationCode } from "@/lib/utils";
 
-export async function requestEmailVerification(userEmail: string) {
+type VerificationResult = {
+  success: boolean;
+  error?: string;
+};
+
+export const requestEmailVerification = async (email: string): Promise<VerificationResult> => {
   const prisma = new PrismaClient();
 
   try {
     // Lookup the user by email
     const user = await prisma.user.findUnique({
-      where: { email: userEmail },
+      where: { email: email },
     });
 
     if (!user) {
@@ -31,21 +36,24 @@ export async function requestEmailVerification(userEmail: string) {
     });
 
     // Send the code via Mailgun
-    await sendVerificationEmail(userEmail, code);
+    await sendVerificationEmail(email, code);
 
     return { success: true };
   } catch (error) {
     console.error('Error in email verification:', error);
-    throw error;
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An unknown error occurred'
+    };
   }
-}
+};
 
-export async function verifyEmailCode(userEmail: string, code: string) {
+export const verifyEmailCode = async (email: string, code: string): Promise<VerificationResult> => {
   const prisma = new PrismaClient();
 
   try {
     // Find user
-    const user = await prisma.user.findUnique({ where: { email: userEmail } });
+    const user = await prisma.user.findUnique({ where: { email: email } });
     if (!user) {
       throw new Error("User not found.");
     }
@@ -81,6 +89,9 @@ export async function verifyEmailCode(userEmail: string, code: string) {
     return { success: true };
   } catch (error) {
     console.error('Error in email verification:', error);
-    throw error;
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An unknown error occurred'
+    };
   }
-} 
+}; 

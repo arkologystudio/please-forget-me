@@ -155,16 +155,11 @@ export function RTBFForm() {
 
   const handleSendVerificationCode = async () => {
     try {
-      const response = await fetch('/api/request-email-verification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userEmail: form.getValues("email") }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send verification code');
+      const userEmail = form.getValues("email");
+      const result = await requestEmailVerification(userEmail);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send verification code');
       }
 
       setVerificationSent(true);
@@ -184,19 +179,11 @@ export function RTBFForm() {
 
   const handleVerifyCode = async () => {
     try {
-      const response = await fetch('/api/verify-email-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userEmail: form.getValues("email"),
-          code: verificationCode
-        }),
-      });
+      const userEmail = form.getValues("email");
+      const result = await verifyEmailCode(userEmail, verificationCode);
 
-      if (!response.ok) {
-        throw new Error('Invalid verification code');
+      if (!result.success) {
+        throw new Error(result.error || 'Invalid verification code');
       }
 
       setIsVerified(true);
@@ -213,7 +200,6 @@ export function RTBFForm() {
       });
     }
   };
-
 
   const generateSummaryCard = (formData: RTBFFormValues) => {
     const selectedOrgs = formData.organisations;
