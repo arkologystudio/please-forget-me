@@ -4,13 +4,14 @@ import { organisations } from "./organisations";
 const prisma = new PrismaClient();
 
 export type OrganisationDB = {
+  id: number;
   name: string;
   email: string;
   slug: string;
 };
 
 async function main() {
-  const createdOrgs = [];
+  const createdOrgs: OrganisationDB[] = [];
 
   for (const org of organisations) {
     const existingOrg = await prisma.organisation.findUnique({
