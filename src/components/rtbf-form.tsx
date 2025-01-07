@@ -116,14 +116,14 @@ export function RTBFForm() {
     return isValid;
   };
 
-  // const isStep4Valid = () => {
-  //   const values = form.getValues();
-  //   const isValid = !!values.authorization;
-  //   if (!isValid) {
-  //     console.log("Step 4 is not valid:", values);
-  //   }
-  //   return isValid;
-  // };
+  const isStep4Valid = () => {
+    const values = form.getValues();
+    const isValid = !!values.authorization;
+    if (!isValid) {
+      console.log("Step 4 is not valid:", values);
+    }
+    return isValid;
+  };
 
   //////////////////////////////
   // FORM SUBMISSION
@@ -769,7 +769,7 @@ export function RTBFForm() {
                   type="button"
                   onClick={nextCard}
                   disabled={
-                    cardIndex === form.getValues("organisations").length - 1
+                    !isStep4Valid()
                   }
                 >
                   Next Request
