@@ -832,7 +832,7 @@ export function RTBFForm() {
                 <Button
                   type="button"
                   className="flex-1"
-                  disabled={!isVerified || isSubmitting}
+                  disabled={!isStep4Valid()}
                 >
                  Next
                 </Button>
