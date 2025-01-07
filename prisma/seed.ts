@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 import { organisations } from "./organisations";
 
 const prisma = new PrismaClient();
@@ -7,6 +7,7 @@ export type OrganisationDB = {
   name: string;
   email: string;
   slug: string;
+  id?: number;
 };
 
 async function main() {
@@ -23,7 +24,11 @@ async function main() {
     }
 
     const createdOrg = await prisma.organisation.create({
-      data: org as OrganisationDB,
+      data: {
+        name: org.name,
+        email: org.email,
+        slug: org.slug,
+      },
     });
     createdOrgs.push(createdOrg);
   }
