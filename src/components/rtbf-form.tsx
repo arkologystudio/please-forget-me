@@ -769,9 +769,6 @@ export function RTBFForm() {
                 <Button
                   type="button"
                   onClick={nextCard}
-                  disabled={
-                    !isStep4Valid()
-                  }
                 >
                   Next Request
                 </Button>
@@ -788,6 +785,9 @@ export function RTBFForm() {
                         onCheckedChange={(checked) => {
                           field.onChange(checked === true);
                         }}
+                        disabled={
+                          !isStep4Valid()
+                        }
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
