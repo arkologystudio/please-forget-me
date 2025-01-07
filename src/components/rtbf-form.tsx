@@ -281,7 +281,7 @@ export function RTBFForm() {
         />
       )}
 
-      <form className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {step === 1 && (
           <>
             <FormField
@@ -832,10 +832,9 @@ export function RTBFForm() {
                 <Button
                   type="button"
                   className="flex-1"
-                  disabled={!isStep4Valid()}
-                  onClick={nextStep}
+                  disabled={!isVerified || isSubmitting}
                 >
-                  Next
+                 Next
                 </Button>
               </div>
             </div>
@@ -900,15 +899,8 @@ export function RTBFForm() {
                 <Button
                   type="submit"
                   className="flex-1"
-                  disabled={!isVerified || isSubmitting}
-                  onClick={() => {
-                    console.log("Submit button clicked", {
-                      isVerified,
-                      isSubmitting,
-                      formState: form.formState
-                    });
-                    onSubmit(form.getValues());
-                  }}
+                  disabled={!isVerified || isSubmitting || !form.formState.isValid}
+
                 >
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
