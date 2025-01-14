@@ -130,7 +130,11 @@ export const submitRTBF = async (
       throw new Error("User not found. Cannot send thread confirmation email.");
     }
 
-    await sendDeliveryConfirmationEmail(fetchedUser);
+    if (process.env.NEXT_PUBLIC_IS_DEV === "true") {
+      console.log("Skipping delivery confirmation email in development mode");
+    } else {
+      await sendDeliveryConfirmationEmail(fetchedUser);
+    }
 
     console.log("Request submitted successfully");
     return { success: true, message: "Request submitted successfully" };

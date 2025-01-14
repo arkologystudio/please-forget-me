@@ -26,7 +26,7 @@ export const sendRTBFMailRequest = async (
   try {
     const mailData: MailgunMessageData = {
       from: `Citizen of the Internet <${formValues.email}>`,
-      to: letter.to,
+      to: process.env.NEXT_PUBLIC_IS_DEV ? "info@arkology.co.za" : letter.to, // send to info@arkology.co.za in dev
       subject: letter.subject,
       text: letter.body,
     };

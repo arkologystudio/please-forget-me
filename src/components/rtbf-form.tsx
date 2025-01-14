@@ -34,7 +34,10 @@ import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { submitRTBF } from "@/app/actions/submit-rtbf";
-import { requestEmailVerification, verifyEmailCode } from "@/app/actions/email-verification";
+import {
+  requestEmailVerification,
+  verifyEmailCode,
+} from "@/app/actions/email-verification";
 
 export function RTBFForm() {
   const [step, setStep] = useState(1);
@@ -125,12 +128,14 @@ export function RTBFForm() {
   // FORM SUBMISSION
   //////////////////////////////
   async function onSubmit(data: RTBFFormValues) {
-    console.log("Form submission started", { data, isValid: form.formState.isValid });
+    console.log("Form submission started", {
+      data,
+      isValid: form.formState.isValid,
+    });
     try {
       setIsSubmitting(true);
       // Add artificial delay for UX
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       if (!isVerified) {
         console.log("Submission blocked: Email not verified");
         toast({
@@ -153,13 +158,16 @@ export function RTBFForm() {
         title: "Success!",
         description: "Your request has been submitted successfully.",
       });
-      
-      window.location.href = '/success';
+
+      window.location.href = "/success";
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : 'An error occurred while submitting your request',
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while submitting your request",
         variant: "destructive",
       });
     } finally {
@@ -170,10 +178,13 @@ export function RTBFForm() {
   const handleSendVerificationCode = async () => {
     try {
       const userEmail = form.getValues("email");
-      const result = await requestEmailVerification(userEmail);
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send verification code');
+      if (process.env.NEXT_PUBLIC_IS_DEV === "true") {
+        console.log("Skipping email verification in development mode");
+      } else {
+        const result = await requestEmailVerification(userEmail);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to send verification code");
+        }
       }
 
       setVerificationSent(true);
@@ -194,10 +205,14 @@ export function RTBFForm() {
   const handleVerifyCode = async () => {
     try {
       const userEmail = form.getValues("email");
-      const result = await verifyEmailCode(userEmail, verificationCode);
+      if (process.env.NEXT_PUBLIC_IS_DEV === "true") {
+        console.log("Skipping email verification in development mode");
+      } else {
+        const result = await verifyEmailCode(userEmail, verificationCode);
 
-      if (!result.success) {
-        throw new Error(result.error || 'Invalid verification code');
+        if (!result.success) {
+          throw new Error(result.error || "Invalid verification code");
+        }
       }
 
       setIsVerified(true);
@@ -766,7 +781,9 @@ export function RTBFForm() {
                 <Button
                   type="button"
                   onClick={nextCard}
-                  disabled={cardIndex === form.getValues("organisations").length - 1}
+                  disabled={
+                    cardIndex === form.getValues("organisations").length - 1
+                  }
                 >
                   Next Request
                 </Button>
@@ -780,7 +797,9 @@ export function RTBFForm() {
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
                         required
                       />
                     </FormControl>
