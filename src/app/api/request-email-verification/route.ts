@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { sendVerificationEmail } from "../../../../client/email/mailgun";
+import { sendVerificationEmail } from "../../../client/email/mailgun";
 import { generateVerificationCode } from "@/lib/utils";
 
 export async function POST(request: Request) {
@@ -14,10 +14,7 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
     // Generate code and expiration
@@ -38,10 +35,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: "Verification code sent." });
   } catch (error) {
-    console.error('Error in email verification:', error);
+    console.error("Error in email verification:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
   }
-} 
+}

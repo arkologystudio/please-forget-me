@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
-import { sendVerificationEmail } from "../../../client/email/mailgun";
+import { sendVerificationEmail } from "../../client/email/mailgun";
 import { generateVerificationCode } from "@/lib/utils";
 
 export default async function handler(
@@ -37,5 +37,3 @@ export default async function handler(
 
   return res.status(200).json({ message: "Verification code sent." });
 }
-
-

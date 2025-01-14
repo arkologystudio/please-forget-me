@@ -5,7 +5,7 @@ import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
 import {
   sendDeliveryConfirmationEmail,
   sendRTBFMailRequest,
-} from "../../../client/email/mailgun";
+} from "../../client/email/mailgun";
 import { generateLetters, LetterOutput } from "@/schemas/rtbf-letter-template";
 import { Organisation } from "@prisma/client";
 
@@ -23,7 +23,9 @@ type SubmitResult = {
   message?: string;
 };
 
-export const submitRTBF = async (formValues: RTBFFormValues): Promise<SubmitResult> => {
+export const submitRTBF = async (
+  formValues: RTBFFormValues
+): Promise<SubmitResult> => {
   try {
     console.log("Starting transaction for RTBF submission");
 
@@ -145,9 +147,10 @@ export const submitRTBF = async (formValues: RTBFFormValues): Promise<SubmitResu
     } catch (logError) {
       console.error("Failed to log initiation attempt:", logError);
     }
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "An unknown error occurred" 
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   } finally {
     console.log("Disconnecting Prisma client");
