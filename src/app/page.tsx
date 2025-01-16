@@ -3,6 +3,7 @@
 import React from "react";
 import { RTBFForm } from "@/components/rtbf-form";
 import Image from "next/image";
+import Donate from "@/components/ui/donate";
 
 export default function Home() {
   const [showMore, setShowMore] = React.useState(false);
@@ -86,6 +87,7 @@ export default function Home() {
           className="container mx-auto px-8 py-16 max-w-2xl bg-slate-100 rounded-lg"
         >
           <RTBFForm />
+          <Donate />
         </div>
       </section>
     </div>
