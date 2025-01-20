@@ -43,14 +43,15 @@ const Donate: React.FC = () => {
           )
         }
         style={{
+          width: "60%",
           borderRadius: "10px",
           color: "rgb(15 23 42 / var(--tw-bg-opacity, 1))",
           background: "white",
-          padding: "6px",
+          padding: "10px",
           border: "solid 2px rgb(15 23 42 / var(--tw-bg-opacity, 1))",
         }}
       >
-        Send a few dollars
+        Buy Us a Coffee
       </button>
       <br />
       <p
