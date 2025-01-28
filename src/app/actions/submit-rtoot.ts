@@ -1,20 +1,20 @@
 "use server";
 
-import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
+import { prisma, TransactionClient, SubmitResult } from "@/utils/prismaClient";
+import { RTOOTFormValues } from "@/schemas/rtoot-form-schema";
 import {
   sendDeliveryConfirmationEmail,
   sendMailRequest,
 } from "../../client/email/mailgun";
-import { generateRtbfLetters } from "@/schemas/rtbf-letter-template";
+import { generateRtootLetters } from "@/schemas/rtoot-letter-template";
 import { Organisation } from "@prisma/client";
-import { prisma, TransactionClient, SubmitResult } from "@/utils/prismaClient";
 import { LetterOutput } from "@/types/general";
 
-export const submitRTBF = async (
-  formValues: RTBFFormValues
+export const submitRTOOT = async (
+  formValues: RTOOTFormValues
 ): Promise<SubmitResult> => {
   try {
-    console.log("Starting transaction for RTBF submission");
+    console.log("Starting transaction for RTOOT submission");
 
     const result = await prisma.$transaction(async (tx: TransactionClient) => {
       console.log("Upserting user");
@@ -49,7 +49,7 @@ export const submitRTBF = async (
       });
 
       console.log("Generating letters");
-      const letters = generateRtbfLetters(formValues);
+      const letters = generateRtootLetters(formValues);
 
       console.log("Sending emails and creating threads");
       const emailPromises = targetOrganisations.map(

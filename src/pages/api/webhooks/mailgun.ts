@@ -4,7 +4,7 @@ import getRawBody from "raw-body";
 // import qs from "qs";
 import { PrismaClient } from "@prisma/client";
 import { MailgunEventData, MailgunWebhookSignature } from "@/types/mailgun";
-import { sendDeliveryConfirmationEmail } from "../../../../client/email/mailgun";
+import { sendDeliveryConfirmationEmail } from "../../../client/email/mailgun";
 // Disable Next.js's default body parser to access raw body
 export const config = {
   api: {
@@ -156,7 +156,7 @@ async function handleDelivered(event: MailgunEventData) {
       return;
     }
 
-    await sendDeliveryConfirmationEmail(user);
+    await sendDeliveryConfirmationEmail(user, "Please Forget Me Request");
     await prisma.email.update({
       where: { mailgunId: messageId },
       data: { status: "delivered" },

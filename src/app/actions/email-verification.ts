@@ -1,7 +1,7 @@
 "use server";
 
 import { PrismaClient } from "@prisma/client";
-import { sendVerificationEmail } from "../../../client/email/mailgun";
+import { sendVerificationEmail } from "../../client/email/mailgun";
 import { generateVerificationCode } from "@/lib/utils";
 
 type VerificationResult = {

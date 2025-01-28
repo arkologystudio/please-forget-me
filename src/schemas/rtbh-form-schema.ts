@@ -1,9 +1,18 @@
 import * as z from "zod";
 
-export const rtbfFormSchema = z.object({
+// Update the evidence schema to separate prompts
+const evidenceSchema = z.object({
+  chatLinks: z
+    .array(z.string().min(2, "Please enter a chat link URL"))
+    .optional(),
+  additionalNotes: z.string().optional(),
+});
+
+export const rtbhFormSchema = z.object({
   organisations: z
     .array(z.string())
     .min(1, "Please select at least one company"),
+  reasons: z.array(z.string()).min(1, "Please select at least one reason"),
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   birthDate: z
@@ -28,10 +37,12 @@ export const rtbfFormSchema = z.object({
   country: z.string().optional(),
   email: z.string().email("Please enter a valid email"),
   // Common field for all LLM interactions
+  prompts: z.array(z.string()).min(1, "At least one prompt is required"),
+  evidence: z.record(z.string(), evidenceSchema).optional(),
   authorization: z.boolean().refine((val) => val === true, {
     message: "You must authorize the request",
   }),
   signature: z.string().optional(),
 });
 
-export type RTBFFormValues = z.infer<typeof rtbfFormSchema>;
+export type RTBHFormValues = z.infer<typeof rtbhFormSchema>;

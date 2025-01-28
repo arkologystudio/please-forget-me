@@ -15,23 +15,23 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
-  rtbfFormSchema,
-  type RTBFFormValues,
-} from "@/schemas/rtbf-form-schema";
+  rtootFormSchema,
+  type RTOOTFormValues,
+} from "@/schemas/rtoot-form-schema";
 import { Progress } from "@/components/ui/progress";
 import CountrySelect from "@/components/ui/country-select";
 
 // import { SignatureCanvas } from "@/components/ui/signature-pad";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { submitRTBF } from "@/app/actions/submit-rtbf";
+import { submitRTOOT } from "@/app/actions/submit-rtoot";
 import {
   requestEmailVerification,
   verifyEmailCode,
 } from "@/app/actions/email-verification";
 import { organisations } from "@/constants/organisation";
 
-export function RTBFForm({ closeForm }: { closeForm: () => void }) {
+export function RTOOTForm({ closeForm }: { closeForm: () => void }) {
   const [step, setStep] = useState(1);
   const TOTAL_STEPS = 4;
   // const [isSignatureConfirmed, setIsSignatureConfirmed] = useState(false);
@@ -54,8 +54,8 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
     setCardIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  const form = useForm<RTBFFormValues>({
-    resolver: zodResolver(rtbfFormSchema),
+  const form = useForm<RTOOTFormValues>({
+    resolver: zodResolver(rtootFormSchema),
     defaultValues: {
       organisations: [],
       firstName: "",
@@ -106,7 +106,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
   //////////////////////////////
   // FORM SUBMISSION
   //////////////////////////////
-  async function onSubmit(data: RTBFFormValues) {
+  async function onSubmit(data: RTOOTFormValues) {
     console.log("Form submission started", {
       data,
       isValid: form.formState.isValid,
@@ -125,9 +125,9 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
         return;
       }
 
-      console.log("Calling submitRTBF...");
-      const response = await submitRTBF(data);
-      console.log("submitRTBF response:", response);
+      console.log("Calling submitRTOOT...");
+      const response = await submitRTOOT(data);
+      console.log("submitRTOOT response:", response);
 
       if (!response.success) {
         throw new Error(response.error || "Failed to submit request");
@@ -209,7 +209,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
     }
   };
 
-  const generateSummaryCard = (formData: RTBFFormValues) => {
+  const generateSummaryCard = (formData: RTOOTFormValues) => {
     const selectedOrgs = formData.organisations;
     if (selectedOrgs.length === 0) return null;
 
@@ -226,7 +226,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
             <div>
               <p className="font-medium">Request Type</p>
               <p className="text-muted-foreground">
-                Right to Be Forgotten (Right to Erasure)
+                Right to Opt Out of AI Training
               </p>
             </div>
             <div>
@@ -254,12 +254,11 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
       {step === 1 ? (
         <div className="mb-8">
           <h2 className="text-2xl font-bold tracking-tight mb-2">
-            Right To Be Hidden From Model Outputs
+            Right to Opt Out of AI Training
           </h2>
           <p className="text-muted-foreground">
-            This request, if successful, ensures that AI Language Models refrain
-            from answering questions or revealing personal information about
-            you.
+            This request, if successful, ensures that your data will not be used
+            to train AI models.
           </p>
           <div className="h-px bg-border mt-6" />
         </div>
@@ -359,9 +358,9 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
             <div className="space-y-2">
               <h3 className="font-medium">Personal Information</h3>
               <p>
-                The following information is included in your Right to be
-                Forgotten request to ensure organisations can 1) identify you
-                and 2) remove your personal data from their systems.
+                The following information is included in your Right to Opt Out
+                of AI Training request to ensure organisations can identify you
+                and remove your personal data from their systems.
               </p>
             </div>
 

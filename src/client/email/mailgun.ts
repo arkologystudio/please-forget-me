@@ -2,16 +2,17 @@ import formData from "form-data";
 import Mailgun, { MailgunMessageData } from "mailgun.js";
 
 import { User } from "@prisma/client";
-import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
+import { RTBHFormValues } from "@/schemas/rtbh-form-schema";
 
-import { LetterOutput } from "@/schemas/rtbf-letter-template";
+import { LetterOutput } from "@/types/general";
+import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
 const DOMAIN = process.env.MAILGUN_DOMAIN || "";
 const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 
-export const sendRTBFMailRequest = async (
+export const sendMailRequest = async (
   letter: LetterOutput,
-  formValues: RTBFFormValues
+  formValues: RTBHFormValues | RTBFFormValues
 ) => {
   const mg = createMailgunClient();
   console.log("sendInitialRequestEmail called with arguments:", {
@@ -26,7 +27,7 @@ export const sendRTBFMailRequest = async (
   try {
     const mailData: MailgunMessageData = {
       from: `Citizen of the Internet <${formValues.email}>`,
-      to: letter.to,
+      to: process.env.NEXT_PUBLIC_IS_DEV ? "info@arkology.co.za" : letter.to, // send to info@arkology.co.za in dev
       subject: letter.subject,
       text: letter.body,
     };
@@ -41,14 +42,16 @@ export const sendRTBFMailRequest = async (
     throw error;
   }
 };
-
-export const sendDeliveryConfirmationEmail = async (recipient: User) => {
+export const sendDeliveryConfirmationEmail = async (
+  recipient: User,
+  request: string
+) => {
   try {
     const mg = createMailgunClient();
     const data: MailgunMessageData = {
       from: `Please Forget Me <${ORGANISATION_EMAIL}>`,
       to: recipient.email,
-      subject: "Delivery Confirmation: Request to be forgotten",
+      subject: `Delivery Confirmation: ${request} Request`,
       text: "This is an email to confirm that your request to be forgotten has been delivered to the relevant organisations.",
     };
 

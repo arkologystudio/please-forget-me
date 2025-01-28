@@ -14,7 +14,7 @@ A scalable web application built with Next.js, TypeScript, and PostgreSQL. All s
 
 Ensure you have the following installed on your machine:
 
-- [Docker](https://www.docker.com/get-started) & [Docker Compose](https://docs.docker.com/compose/install/)
+- [Docker](https://www.docker.com/get-started) 
 - [Node.js](https://nodejs.org/en/download/) (v22 or later)
 - [npm](https://www.npmjs.com/get-npm) 
 
@@ -37,46 +37,15 @@ Ensure you have the following installed on your machine:
 Start all services using Docker Compose:
 
 ```bash
-docker-compose up --build -d
+npm run start:all
 ```
 
-- **`--build`**: Rebuilds the Docker images if there are changes.
-- **`-d`**: Runs the containers in detached mode.
 
-## Docker Services Overview
+## Stopping the Application
 
-The application leverages multiple Docker services orchestrated via Docker Compose to manage different aspects of the system. Here’s a summary of each service and its corresponding role:
-
-- **db (PostgreSQL Database)**
-  - **Purpose:** Hosts the PostgreSQL database.
-  - **Configuration:** Sets up environment variables for database credentials and initializes the database.
-  - **Health Check:** Ensures the database is ready before other services depend on it.
-
-- **migrate (Prisma Migrations)**
-  - **Purpose:** Applies database schema migrations to keep the database in sync with the Prisma schema.
-  - **Workflow:** Waits for the database to be healthy, applies migrations, and generates the Prisma Client.
-
-- **seed (Database Seeding)**
-  - **Purpose:** Populates the database with initial data required for the application to function correctly.
-  - **Workflow:** Depends on the successful completion of migrations to ensure that the schema is up-to-date before seeding.
-
-- **app (Next.js Application)**
-  - **Purpose:** Runs the Next.js frontend application.
-  - **Workflow:** Ensures that all dependencies are met and that the Prisma Client reflects the latest schema before launching the application.
-
-### Volume Management
-
-- **db-data:** Persists PostgreSQL data between container restarts.
-- **node_modules:** Shares the node_modules directory across services to maintain consistency in dependencies.
-
-### Service Dependencies
-
-- **migrate** depends on **db** being healthy.
-- **seed** depends on **migrate** completing successfully.
-- **app** depends on **seed** completing successfully.
-
-This orchestration ensures that the database is properly set up and seeded with initial data before the application starts, maintaining the integrity and readiness of the development environment.
-
+```bash
+npm run stop:all
+```
 
 ## Running Database Migrations
 
