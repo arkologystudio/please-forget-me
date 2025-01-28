@@ -1,17 +1,17 @@
 "use server";
 
-import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
+import { RTBHFormValues } from "@/schemas/rtbh-form-schema";
 import {
   sendDeliveryConfirmationEmail,
   sendMailRequest,
 } from "../../client/email/mailgun";
-import { generateRtbfLetters } from "@/schemas/rtbf-letter-template";
+import { generateRtbhLetters } from "@/schemas/rtbh-letter-template";
 import { Organisation } from "@prisma/client";
 import { prisma, TransactionClient, SubmitResult } from "@/utils/prismaClient";
 import { LetterOutput } from "@/types/general";
 
-export const submitRTBF = async (
-  formValues: RTBFFormValues
+export const submitRTBH = async (
+  formValues: RTBHFormValues
 ): Promise<SubmitResult> => {
   try {
     console.log("Starting transaction for RTBF submission");
@@ -49,7 +49,7 @@ export const submitRTBF = async (
       });
 
       console.log("Generating letters");
-      const letters = generateRtbfLetters(formValues);
+      const letters = generateRtbhLetters(formValues);
 
       console.log("Sending emails and creating threads");
       const emailPromises = targetOrganisations.map(
@@ -120,7 +120,10 @@ export const submitRTBF = async (
     if (process.env.NEXT_PUBLIC_IS_DEV === "true") {
       console.log("Skipping delivery confirmation email in development mode");
     } else {
-      await sendDeliveryConfirmationEmail(fetchedUser, "Right to be Forgotten");
+      await sendDeliveryConfirmationEmail(
+        fetchedUser,
+        "Right to Be Hidden from Model Outputs"
+      );
     }
 
     console.log("Request submitted successfully");

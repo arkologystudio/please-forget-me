@@ -21,7 +21,7 @@ const Donate: React.FC = () => {
     <div
       style={{
         position: "absolute",
-        right: "5%",
+        right: "3%",
         bottom: "-50%",
         width: "300px",
         height: "250px",

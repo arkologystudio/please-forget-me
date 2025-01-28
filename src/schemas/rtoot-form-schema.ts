@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-export const rtbfFormSchema = z.object({
+export const rtootFormSchema = z.object({
   organisations: z
     .array(z.string())
     .min(1, "Please select at least one company"),
@@ -34,4 +34,4 @@ export const rtbfFormSchema = z.object({
   signature: z.string().optional(),
 });
 
-export type RTBFFormValues = z.infer<typeof rtbfFormSchema>;
+export type RTOOTFormValues = z.infer<typeof rtootFormSchema>;

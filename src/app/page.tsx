@@ -1,16 +1,32 @@
 "use client";
 
 import React from "react";
+import { RTBHForm } from "@/components/rtbh-form";
 import { RTBFForm } from "@/components/rtbf-form";
+
 import Image from "next/image";
 import Donate from "@/components/ui/donate";
+import ServicePane from "@/components/ui/service-pane";
+import { RTOOTForm } from "@/components/rtoot-form";
+
+type FormType = "form1" | "form2" | "form3";
 
 export default function Home() {
   const [showMore, setShowMore] = React.useState(false);
+  const [activeForm, setActiveForm] = React.useState<FormType | null>(null);
 
   const scrollToForm = () => {
     const formSection = document.getElementById("form-section");
     formSection?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleBeginForm = (form: FormType) => {
+    setActiveForm(form);
+    scrollToForm();
+  };
+
+  const handleCloseForm = () => {
+    setActiveForm(null);
   };
 
   return (
@@ -50,14 +66,14 @@ export default function Home() {
                   <p className="text-lg text-slate-600 max-w-3xl mt-2">
                     Whether your data was processed without consent, contains
                     inaccuracies, or you&apos;re concerned about its impact on
-                    your privacy, you can request its removal.
+                    your privacy, you can exercise your rights.
                   </p>
                 </div>
               </div>
               <p className="text-2xl md:text-4xl leading-tight text-slate-700 max-w-3xl mt-8">
-                Please Forget Me helps exercise your{" "}
-                <i>Right To Be Forgotten</i> from AI companies, including
-                OpenAI, Meta and Google.
+                Please Forget Me helps exercise your <i>Rights</i> and protects
+                your data online from AI companies, including OpenAI, Meta and
+                Google.
               </p>
             </div>
           </div>
@@ -82,11 +98,38 @@ export default function Home() {
         </div>
       </div>
       <section className="bg-slate-900 py-16">
-        <div
-          id="form-section"
-          className="container mx-auto px-8 py-16 max-w-2xl bg-slate-100 rounded-lg"
-        >
-          <RTBFForm />
+        <div className="container mx-auto px-8 py-16 max-w-4xl bg-slate-100 rounded-lg space-y-8">
+          {activeForm === null ? (
+            <div className="flex flex-col md:flex-row gap-8">
+              <ServicePane
+                title="Right to Opt Out of Training Request"
+                description="A Training Opt-Out Request is a formal directive by or on behalf of an individual to an organization, requesting that their personal data be excluded from any processes involved in training machine learning models or artificial intelligence systems."
+                onBegin={() => handleBeginForm("form1")}
+              />
+              <ServicePane
+                title="Right to be Forgotten Request"
+                description="This allows individuals to request that their data be erased from the organization's records and no longer be processed or used."
+                onBegin={() => handleBeginForm("form2")}
+              />
+              <ServicePane
+                title="Right to be Hidden Request"
+                description="This allows individuals to request that AI models do not produce outputs containing their personal data."
+                onBegin={() => handleBeginForm("form3")}
+              />
+            </div>
+          ) : (
+            <div className="relative">
+              {activeForm === "form1" && (
+                <RTOOTForm closeForm={handleCloseForm} />
+              )}
+              {activeForm === "form2" && (
+                <RTBFForm closeForm={handleCloseForm} />
+              )}
+              {activeForm === "form3" && (
+                <RTBHForm closeForm={handleCloseForm} />
+              )}
+            </div>
+          )}
           <Donate />
         </div>
       </section>

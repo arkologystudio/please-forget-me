@@ -156,7 +156,7 @@ async function handleDelivered(event: MailgunEventData) {
       return;
     }
 
-    await sendDeliveryConfirmationEmail(user);
+    await sendDeliveryConfirmationEmail(user, "Please Forget Me Request");
     await prisma.email.update({
       where: { mailgunId: messageId },
       data: { status: "delivered" },

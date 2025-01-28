@@ -1,10 +1,10 @@
 import { OrganisationInput } from "@/types/organisation";
-import { RTBFFormValues } from "./rtbf-form-schema";
+import { type RTOOTFormValues } from "./rtoot-form-schema";
 import { organisations } from "@/constants/organisation";
 import { LetterOutput } from "@/types/general";
 
 function generateLetter(
-  data: RTBFFormValues,
+  data: RTOOTFormValues,
   organisation: OrganisationInput
 ): LetterOutput {
   const signatureHtml = data.signature
@@ -13,7 +13,7 @@ function generateLetter(
 
   const body = `Dear ${organisation.label},
 
-I am writing to request the deletion of personal data.
+I am writing to request that you do not train AI or machine learning models on my data.
 
 I confirm that I am the individual whose data this request concerns and I authorize Please Forget Me to submit this request on my behalf. 
 
@@ -32,12 +32,12 @@ ${signatureHtml}`;
 
   return {
     to: organisation.email,
-    subject: `Right to Erasure Request (${data.firstName} ${data.lastName})`,
+    subject: `Right to Opt Out of AI Training Request (${data.firstName} ${data.lastName})`,
     body,
   };
 }
 
-export function generateRtbfLetters(data: RTBFFormValues): LetterOutput[] {
+export function generateRtootLetters(data: RTOOTFormValues): LetterOutput[] {
   const selectedOrganisations = data.organisations
     .map((slug) => organisations.find((c) => c.slug === slug))
     .filter((c): c is (typeof organisations)[number] => c !== undefined);

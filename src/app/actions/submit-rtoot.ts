@@ -1,28 +1,23 @@
-import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
-import { PrismaClient } from "@prisma/client";
-import { generateLetters, LetterOutput } from "@/schemas/rtbf-letter-template";
-import { Organisation } from "@prisma/client";
-import { NextResponse } from "next/server";
+"use server";
+
+import { prisma, TransactionClient, SubmitResult } from "@/utils/prismaClient";
+import { RTOOTFormValues } from "@/schemas/rtoot-form-schema";
 import {
   sendDeliveryConfirmationEmail,
-  sendRTBFMailRequest,
-} from "../../../client/email/mailgun";
+  sendMailRequest,
+} from "../../client/email/mailgun";
+import { generateRtootLetters } from "@/schemas/rtoot-letter-template";
+import { Organisation } from "@prisma/client";
+import { LetterOutput } from "@/types/general";
 
-// Instantiate Prisma Client outside the handler to prevent multiple instances in serverless environments
-const prisma = new PrismaClient();
-
-type TransactionClient = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
->;
-
-export async function POST(request: Request) {
+export const submitRTOOT = async (
+  formValues: RTOOTFormValues
+): Promise<SubmitResult> => {
   try {
-    const formValues: RTBFFormValues = await request.json();
-    console.log("Received request body:", formValues);
+    console.log("Starting transaction for RTOOT submission");
 
-    // Start a transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx: TransactionClient) => {
+      console.log("Upserting user");
       const user = await tx.user.upsert({
         where: { identifier: formValues.email },
         update: {},
@@ -32,20 +27,20 @@ export async function POST(request: Request) {
         },
       });
 
-      console.log("User upserted with ID:", user.id);
-
-      const organisationsDB = (await tx.organisation.findMany({
+      console.log("Fetching organisations");
+      const organisationsDB = await tx.organisation.findMany({
         where: {
           slug: {
             in: formValues.organisations,
           },
         },
-      })) as Organisation[];
+      });
 
       const targetOrganisations = organisationsDB.filter((org: Organisation) =>
         formValues.organisations.includes(org.slug)
       );
 
+      console.log("Creating form submission");
       const formSubmission = await tx.formSubmission.create({
         data: {
           userId: user.id,
@@ -53,10 +48,10 @@ export async function POST(request: Request) {
         },
       });
 
-      console.log("Form submission created with ID:", formSubmission.id);
+      console.log("Generating letters");
+      const letters = generateRtootLetters(formValues);
 
-      const letters = generateLetters(formValues);
-
+      console.log("Sending emails and creating threads");
       const emailPromises = targetOrganisations.map(
         async (org: Organisation) => {
           const letter = letters.find(
@@ -66,11 +61,12 @@ export async function POST(request: Request) {
             throw new Error(`Letter not found for organisation: ${org.name}`);
           }
 
-          const emailContent = await sendRTBFMailRequest(letter, formValues);
+          const emailContent = await sendMailRequest(letter, formValues);
           if (!emailContent.message || !emailContent.id) {
             throw new Error("Email content is undefined");
           }
 
+          console.log(`Creating thread for organisation: ${org.name}`);
           const thread = await tx.thread.create({
             data: {
               userId: user.id,
@@ -79,6 +75,7 @@ export async function POST(request: Request) {
             },
           });
 
+          console.log(`Creating email record for organisation: ${org.name}`);
           const emailRecord = await tx.email.create({
             data: {
               threadId: thread.id,
@@ -91,6 +88,9 @@ export async function POST(request: Request) {
             },
           });
 
+          console.log(
+            `Email record created with Mailgun ID: ${emailContent.id}`
+          );
           return { thread, email: emailRecord };
         }
       );
@@ -101,17 +101,14 @@ export async function POST(request: Request) {
       );
 
       if (failed.length > 0) {
-        console.error(
-          "Failed to send some initial request emails or create threads:",
-          failed
-        );
+        console.error("Failed to process some organisations.");
         throw new Error("Failed to process some organisations.");
       }
 
       return { user, formSubmission };
     });
 
-    // Send confirmation email
+    console.log("Sending confirmation email");
     const fetchedUser = await prisma.user.findUnique({
       where: { id: result.user.id },
     });
@@ -120,14 +117,17 @@ export async function POST(request: Request) {
       throw new Error("User not found. Cannot send thread confirmation email.");
     }
 
-    await sendDeliveryConfirmationEmail(fetchedUser);
+    if (process.env.NEXT_PUBLIC_IS_DEV === "true") {
+      console.log("Skipping delivery confirmation email in development mode");
+    } else {
+      await sendDeliveryConfirmationEmail(fetchedUser, "Right to be Forgotten");
+    }
 
-    return NextResponse.json({ message: "Request submitted successfully" });
-  } catch (error: Error | unknown) {
+    console.log("Request submitted successfully");
+    return { success: true, message: "Request submitted successfully" };
+  } catch (error) {
     console.error("Error processing request:", error);
     try {
-      const formValues: RTBFFormValues = await request.json();
-
       await prisma.failedInitiationAttempt.create({
         data: {
           errorMessage:
@@ -138,15 +138,13 @@ export async function POST(request: Request) {
     } catch (logError) {
       console.error("Failed to log initiation attempt:", logError);
     }
-
-    return NextResponse.json(
-      {
-        message:
-          error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
   } finally {
+    console.log("Disconnecting Prisma client");
     await prisma.$disconnect();
   }
-}
+};

@@ -15,25 +15,35 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
-  rtbfFormSchema,
-  type RTBFFormValues,
-} from "@/schemas/rtbf-form-schema";
+  rtbhFormSchema,
+  type RTBHFormValues,
+} from "@/schemas/rtbh-form-schema";
 import { Progress } from "@/components/ui/progress";
 import CountrySelect from "@/components/ui/country-select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 
 // import { SignatureCanvas } from "@/components/ui/signature-pad";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { submitRTBF } from "@/app/actions/submit-rtbf";
+import { submitRTBH } from "@/app/actions/submit-rtbh";
 import {
   requestEmailVerification,
   verifyEmailCode,
 } from "@/app/actions/email-verification";
-import { organisations } from "@/constants/organisation";
+import {
+  organisationsWithEvidenceFields,
+  rtbfReasons,
+} from "@/constants/organisation";
 
-export function RTBFForm({ closeForm }: { closeForm: () => void }) {
+export function RTBHForm({ closeForm }: { closeForm: () => void }) {
   const [step, setStep] = useState(1);
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 5;
   // const [isSignatureConfirmed, setIsSignatureConfirmed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -54,15 +64,18 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
     setCardIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  const form = useForm<RTBFFormValues>({
-    resolver: zodResolver(rtbfFormSchema),
+  const form = useForm<RTBHFormValues>({
+    resolver: zodResolver(rtbhFormSchema),
     defaultValues: {
       organisations: [],
+      reasons: [],
       firstName: "",
       lastName: "",
       email: "",
       country: "",
       birthDate: "",
+      prompts: [],
+      evidence: {},
       authorization: false,
     },
     mode: "onChange",
@@ -72,7 +85,8 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
   //////////////////////////////
   const isStep1Valid = () => {
     const values = form.getValues();
-    const isValid = values.organisations.length > 0;
+    const isValid =
+      values.organisations.length > 0 && values.reasons.length > 0;
     if (!isValid) {
       console.log("Step 1 is not valid:", values);
     }
@@ -80,6 +94,15 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
   };
 
   const isStep2Valid = () => {
+    const values = form.getValues();
+    const isValid = (values.prompts?.length ?? 0) > 0;
+    if (!isValid) {
+      console.log("Step 2 is not valid:", values);
+    }
+    return isValid;
+  };
+
+  const isStep3Valid = () => {
     const values = form.getValues();
     const isValid = !!(
       values.firstName?.trim() &&
@@ -89,16 +112,16 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
       values.country?.trim()
     );
     if (!isValid) {
-      console.log("Step 2 is not valid:", values);
+      console.log("Step 3 is not valid:", values);
     }
     return isValid;
   };
 
-  const isStep3Valid = () => {
+  const isStep4Valid = () => {
     const values = form.getValues();
     const isValid = !!values.authorization;
     if (!isValid) {
-      console.log("Step 3 is not valid:", values);
+      console.log("Step 4 is not valid:", values);
     }
     return isValid;
   };
@@ -106,7 +129,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
   //////////////////////////////
   // FORM SUBMISSION
   //////////////////////////////
-  async function onSubmit(data: RTBFFormValues) {
+  async function onSubmit(data: RTBHFormValues) {
     console.log("Form submission started", {
       data,
       isValid: form.formState.isValid,
@@ -125,9 +148,9 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
         return;
       }
 
-      console.log("Calling submitRTBF...");
-      const response = await submitRTBF(data);
-      console.log("submitRTBF response:", response);
+      console.log("Calling submitRTBH...");
+      const response = await submitRTBH(data);
+      console.log("submitRTBH response:", response);
 
       if (!response.success) {
         throw new Error(response.error || "Failed to submit request");
@@ -209,12 +232,14 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
     }
   };
 
-  const generateSummaryCard = (formData: RTBFFormValues) => {
+  const generateSummaryCard = (formData: RTBHFormValues) => {
     const selectedOrgs = formData.organisations;
     if (selectedOrgs.length === 0) return null;
 
     const org = selectedOrgs[cardIndex];
-    const orgDetails = organisations.find((o) => o.slug === org);
+    const orgDetails = organisationsWithEvidenceFields.find(
+      (o) => o.slug === org
+    );
 
     return (
       <Card key={org} className="mb-4">
@@ -226,12 +251,24 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
             <div>
               <p className="font-medium">Request Type</p>
               <p className="text-muted-foreground">
-                Right to Be Forgotten (Right to Erasure)
+                Right to Be Hidden from Model Outputs
               </p>
             </div>
             <div>
               <p className="font-medium">Est. Response Time</p>
               <p className="text-muted-foreground">14-28 days</p>
+            </div>
+            <div>
+              <p className="font-medium">Prompts Provided</p>
+              <p className="text-muted-foreground">
+                {formData.prompts?.length || 0} prompt(s)
+              </p>
+            </div>
+            <div>
+              <p className="font-medium">Selected Reasons</p>
+              <p className="text-muted-foreground">
+                {formData.reasons.length} reason(s)
+              </p>
             </div>
           </div>
         </CardContent>
@@ -282,7 +319,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
                   <div className="space-y-4">
                     <FormLabel>Dear,</FormLabel>
                     <div className="space-y-2">
-                      {organisations.map((organisation) => (
+                      {organisationsWithEvidenceFields.map((organisation) => (
                         <FormField
                           key={organisation.slug}
                           control={form.control}
@@ -322,9 +359,14 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
                         size="sm"
                         className="mb-2"
                         onClick={() => {
-                          const allOrgs = organisations.map((org) => org.slug);
+                          const allOrgs = organisationsWithEvidenceFields.map(
+                            (org) => org.slug
+                          );
                           const currentValue = form.getValues("organisations");
-                          if (currentValue.length === organisations.length) {
+                          if (
+                            currentValue.length ===
+                            organisationsWithEvidenceFields.length
+                          ) {
                             form.setValue("organisations", []);
                           } else {
                             form.setValue("organisations", allOrgs);
@@ -332,10 +374,78 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
                         }}
                       >
                         {form.getValues("organisations").length ===
-                        organisations.length
+                        organisationsWithEvidenceFields.length
                           ? "Deselect All"
                           : "Select All"}
                       </Button>
+                    </div>
+                    <div className="space-y-4">
+                      <p>
+                        Please remove my personal data from your systems, for
+                        the following reasons:
+                      </p>
+                      <FormField
+                        control={form.control}
+                        name="reasons"
+                        rules={{
+                          required: "Please select at least one reason",
+                        }}
+                        render={() => (
+                          <FormItem>
+                            <div className="space-y-2">
+                              {rtbfReasons.map((reason) => (
+                                <FormField
+                                  key={reason.id}
+                                  control={form.control}
+                                  name="reasons"
+                                  render={({ field }) => (
+                                    <FormItem className="flex items-center space-x-3">
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(
+                                            reason.id
+                                          )}
+                                          onCheckedChange={(checked) => {
+                                            const value = field.value || [];
+                                            return checked
+                                              ? field.onChange([
+                                                  ...value,
+                                                  reason.id,
+                                                ])
+                                              : field.onChange(
+                                                  value.filter(
+                                                    (val) => val !== reason.id
+                                                  )
+                                                );
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <div className="flex items-center space-x-2">
+                                        <FormLabel className="text-sm">
+                                          {reason.label}
+                                        </FormLabel>
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger>
+                                              <InfoCircledIcon className="h-4 w-4 text-muted-foreground" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p className="w-80 text-sm">
+                                                {reason.tooltip}
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </div>
+                                    </FormItem>
+                                  )}
+                                />
+                              ))}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </div>
                   <FormMessage />
@@ -356,12 +466,201 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
 
         {step === 2 && (
           <>
+            <div className="space-y-4 border-b pb-4 mb-6">
+              <h3 className="font-medium">System Interaction Details</h3>
+              <p>
+                The following information assists organisations to identify and
+                remove your personal data from their systems.
+              </p>
+              <FormField
+                control={form.control}
+                name="prompts"
+                rules={{ required: "At least one prompt is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="prompts">
+                      Prompts Used (Separate by comma)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        id="prompts"
+                        placeholder="Prompts that reveal your personal data (e.g., 'Where does Joe Shmoe live?')"
+                        value={field.value?.[field.value.length - 1] || ""}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          field.onChange(newValue ? [newValue] : []);
+                        }}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-4">
+              {form.watch("organisations").map((organisationId) => {
+                const organisation = organisationsWithEvidenceFields.find(
+                  (c) => c.slug === organisationId
+                );
+                if (!organisation) return null;
+
+                return (
+                  <div key={organisationId} className="border rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const element = document.getElementById(
+                          `org-content-${organisationId}`
+                        );
+                        element?.classList.toggle("hidden");
+                      }}
+                      className="w-full px-4 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors rounded-lg"
+                    >
+                      <h3 className="font-medium">
+                        {organisation.label} Evidence
+                      </h3>
+                      <svg
+                        className="w-5 h-5 text-slate-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    <div
+                      id={`org-content-${organisationId}`}
+                      className="hidden px-4 py-3 space-y-4 border-t"
+                    >
+                      {organisation.evidenceFields.chatLinks && (
+                        <FormField
+                          control={form.control}
+                          name={`evidence.${organisationId}.chatLinks`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel
+                                htmlFor={`${organisation.slug}-chatlinks`}
+                              >
+                                {organisation.evidenceFields.chatLinks?.label}
+                              </FormLabel>
+                              <div className="space-y-2">
+                                {(!field.value?.length
+                                  ? [""]
+                                  : field.value
+                                ).map((link, index) => (
+                                  <div key={index} className="flex gap-2">
+                                    <FormControl>
+                                      <Input
+                                        id={`${organisation.slug}-chatlinks-${index}`}
+                                        placeholder={
+                                          organisation.evidenceFields.chatLinks
+                                            ?.placeholder
+                                        }
+                                        value={link}
+                                        onChange={(e) => {
+                                          const newLinks = [
+                                            ...(field.value || []),
+                                          ];
+                                          newLinks[index] = e.target.value;
+                                          field.onChange(newLinks);
+                                        }}
+                                      />
+                                    </FormControl>
+                                    {(field.value || []).length > 1 && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                          const newLinks =
+                                            field.value?.filter(
+                                              (_, i) => i !== index
+                                            ) || [];
+                                          field.onChange(newLinks);
+                                        }}
+                                      >
+                                        ✕
+                                      </Button>
+                                    )}
+                                  </div>
+                                ))}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    field.onChange([
+                                      ...(field.value || []),
+                                      "",
+                                    ]);
+                                  }}
+                                >
+                                  Add Another Link
+                                </Button>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      <FormField
+                        control={form.control}
+                        name={`evidence.${organisationId}.additionalNotes`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel
+                              htmlFor={`${organisation.slug}-additional-notes`}
+                            >
+                              Additional Notes (Optional)
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                id={`${organisation.slug}-additional-notes`}
+                                placeholder="Any additional context or information..."
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex space-x-2">
+              <Button type="button" variant="outline" onClick={prevStep}>
+                Back
+              </Button>
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={!isStep2Valid()}
+              >
+                Continue
+              </Button>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
             <div className="space-y-2">
               <h3 className="font-medium">Personal Information</h3>
               <p>
-                The following information is included in your Right to be
-                Forgotten request to ensure organisations can 1) identify you
-                and 2) remove your personal data from their systems.
+                The following information is included in your Right to be Hidden
+                request to ensure organisations can identify you and ensure your
+                identity is not used in AI model outputs.
               </p>
             </div>
 
@@ -445,6 +744,20 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
               )}
             />
 
+            {/* <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number (Optional)</FormLabel>
+                  <FormControl>
+                    <PhoneInput placeholder="Enter your phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
+
             <div className="flex space-x-2">
               <Button type="button" variant="outline" onClick={prevStep}>
                 Back
@@ -452,7 +765,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
               <Button
                 type="button"
                 onClick={nextStep}
-                disabled={!isStep2Valid()}
+                disabled={!isStep3Valid()}
               >
                 Continue
               </Button>
@@ -460,7 +773,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
           </>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
             <div className="space-y-8">
               <div>
@@ -503,7 +816,9 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => field.onChange(checked)}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
                         required
                       />
                     </FormControl>
@@ -525,7 +840,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
                 <Button
                   type="button"
                   className="flex-1"
-                  disabled={!isStep3Valid()}
+                  disabled={!isStep4Valid()}
                   onClick={nextStep}
                 >
                   Next
@@ -535,7 +850,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
           </>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <>
             <div className="space-y-6">
               <div>
@@ -590,11 +905,7 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
                 <Button type="button" variant="outline" onClick={prevStep}>
                   Back
                 </Button>
-                <button
-                  onClick={() => console.log(form.getValues(), isVerified)}
-                >
-                  test
-                </button>
+
                 <Button
                   type="submit"
                   className="flex-1"
@@ -603,6 +914,9 @@ export function RTBFForm({ closeForm }: { closeForm: () => void }) {
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
               </div>
+              <button onClick={() => console.log(form.getValues(), isVerified)}>
+                test
+              </button>
             </div>
           </>
         )}
