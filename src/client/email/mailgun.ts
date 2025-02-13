@@ -3,16 +3,16 @@ import Mailgun, { MailgunMessageData } from "mailgun.js";
 
 import { User } from "@prisma/client";
 import { RTBHFormValues } from "@/schemas/rtbh-form-schema";
-
+import { PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
 import { LetterOutput } from "@/types/general";
-import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
+
 const DOMAIN = process.env.MAILGUN_DOMAIN || "";
 const FROM_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 const ORGANISATION_EMAIL = process.env.ORGANISATION_EMAIL || ""; //TODO make a new email
 
 export const sendMailRequest = async (
   letter: LetterOutput,
-  formValues: RTBHFormValues | RTBFFormValues
+  formValues: PersonalInfoFormValues & Partial<RTBHFormValues>
 ) => {
   const mg = createMailgunClient();
   console.log("sendInitialRequestEmail called with arguments:", {
