@@ -12,7 +12,7 @@ import { RequestID } from "@/types/requests";
 export default function Home() {
   const [showMore, setShowMore] = React.useState(false);
   const [showForm, setShowForm] = React.useState<boolean>(false);
-  const [selectedForms, setSelectedForms] = React.useState<RequestID[]>(['RTOOT']);
+  const [selectedForms, setSelectedForms] = React.useState<RequestID[]>(['rtoot']);
 
   const scrollToForm = () => {
     const formSection = document.getElementById("form-section");
@@ -111,22 +111,22 @@ export default function Home() {
                 <RequestCard
                   title="Opt Out of Training Request"
                   description="Request that your personal data is excluded from any processes involved in training AI systems."
-                  isSelected={selectedForms.includes('RTOOT')}
-                  onToggle={() => toggleRequestSelection('RTOOT')}
+                  isSelected={selectedForms.includes('rtoot')}
+                  onToggle={() => toggleRequestSelection('rtoot')}
                 />
                 
                 <RequestCard
                   title="Right to be Hidden Request"
                   description="Request that AI models do not produce outputs containing your personal data."
-                  isSelected={selectedForms.includes('RTBH')}
-                  onToggle={() => toggleRequestSelection('RTBH')}
+                  isSelected={selectedForms.includes('rtbh')}
+                  onToggle={() => toggleRequestSelection('rtbh')}
                 />
 
               <RequestCard
                   title="Right to be Forgotten Request"
                   description="Request that your personal data be erased from the organization's records and no longer processed or used."
-                  isSelected={selectedForms.includes('RTBF')}
-                  onToggle={() => toggleRequestSelection('RTBF')}
+                  isSelected={selectedForms.includes('rtbf')}
+                  onToggle={() => toggleRequestSelection('rtbf')}
                 />
               </div>
 

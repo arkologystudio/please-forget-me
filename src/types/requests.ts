@@ -4,4 +4,4 @@ export type RequestType = {
   description: string;
 };
 
-export type RequestID = "RTBF" | "RTOOT" | "RTBH";
+export type RequestID = "rtbf" | "rtoot" | "rtbh";

@@ -33,6 +33,8 @@ import { organisations, organisationsWithEvidenceFields } from "@/constants/orga
 import { z } from "zod";
 import { personalInfoFormSchema, PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
 import { rtbhFormSchema, RTBHFormValues } from "@/schemas/rtbh-form-schema";
+import { requests } from "@/constants/requests";
+
 
 export function MainForm({ selectedForms, closeForm }: { selectedForms: string[], closeForm: () => void }) {
   const [step, setStep] = useState(1);
@@ -61,7 +63,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
     resolver: zodResolver(
       z.object({
         ...personalInfoFormSchema.shape,
-        ...(selectedForms.includes("RTBH") ? rtbhFormSchema.shape : {}),
+        ...(selectedForms.includes("rtbh") ? rtbhFormSchema.shape : {}),
       })
     ),
     defaultValues: {
@@ -72,7 +74,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
       country: "",
       birthDate: "",
       authorization: false,
-      ...(selectedForms.includes("RTBH") && {
+      ...(selectedForms.includes("rtbh") && {
         prompts: [],
         evidence: {},
       }),
@@ -153,9 +155,9 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
       }
 
       console.log("Calling submitRTBF...");
-      const requests = selectedForms.map((form) => requests[form]);
-      console.log("requests:", requests);
-      const response = await submitRequest(data, requests);
+      const selectedRequests = selectedForms.map((form) => requests[form]);
+      console.log("requests:", selectedRequests);
+      const response = await submitRequest(data, selectedRequests);
       console.log("submitRTBF response:", response);
 
       if (!response.success) {
@@ -257,9 +259,9 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
               <div className="text-muted-foreground">
                 {selectedForms.map((form) => (
                   <p key={form}>
-                    {form === "RTBF" ? "Right to Be Forgotten (Right to Erasure)" : 
-                     form === "RTBH" ? "Right to Be Hidden" :
-                     form === "RTOOT" ? "Opt Out of AI Training" : form}
+                    {form === "rtbf" ? "Right to Be Forgotten (Right to Erasure)" : 
+                     form === "rtbh" ? "Right to Be Hidden" :
+                     form === "rtoot" ? "Opt Out of AI Training" : form}
                   </p>
                 ))}
               </div>
@@ -481,7 +483,7 @@ const step2 = () => {
               </Button>
               <Button
                 type="button"
-                onClick={selectedForms.includes("RTBH") ? nextStep : () => setStep(step+2)}
+                onClick={selectedForms.includes("rtbh") ? nextStep : () => setStep(step+2)}
                 disabled={!isStep2Valid()}
               >
                 Continue
@@ -494,7 +496,7 @@ const step2 = () => {
 const step3 = () => {
   console.log("Selected Forms", selectedForms);
   console.log("Step", step);
-  if (step !== 3 || !selectedForms.includes("RTBH")) return null;
+  if (step !== 3 || !selectedForms.includes("rtbh")) return null;
   return (
     <>
               <div className="mb-8">
@@ -860,7 +862,7 @@ const step5 = () => {
     <Form {...form}>
       
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form className="space-y-8">
       <button
         type="button"
         onClick={closeForm}

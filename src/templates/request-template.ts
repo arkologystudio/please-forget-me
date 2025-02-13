@@ -24,7 +24,7 @@ ${requests
       request.description
     }`;
     if (
-      request.label === "RTBH" &&
+      request.label === "rtbh" &&
       "reasons" in data &&
       "prompts" in data &&
       "evidence" in data
@@ -53,8 +53,7 @@ Date of Birth: ${data.birthDate}
 I look forward to receiving confirmation of this request, and a follow up that you have complied with my request within one month.
 
 Best regards,
-${data.firstName} ${data.lastName}
-${signatureHtml}`;
+${data.firstName} ${data.lastName}`;
 
   return {
     to: organisation.email,
