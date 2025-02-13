@@ -1,37 +1,43 @@
 import React from "react";
-import { Button } from "./button";
+import { Card } from "./card";
 
 interface ServicePaneProps {
   title: string;
   description: string;
-  onBegin: () => void;
+  isSelected: boolean;
+  onToggle: () => void;
+  height?: string;
+  width?: string;
 }
 
 const ServicePane: React.FC<ServicePaneProps> = ({
   title,
   description,
-  onBegin,
+  isSelected,
+  onToggle,
 }) => {
   return (
-    <div
-      className="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between"
-      style={{ height: "450px", width: "300px" }}
+    <Card
+      className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      onClick={onToggle}
     >
-      <div>
-        <h2 className="text-2xl font-bold mb-2">{title}</h2>
-        <p className="text-slate-600 mb-4">{description}</p>
+      <div className="p-6 flex flex-col" style={{ width: "300px" }}>
+        <div>
+          <h2 className="text-2xl font-bold mb-2">{title}</h2>
+          <p className="text-slate-600 mb-4">{description}</p>
+        </div>
+        <div className="mt-auto flex items-center">
+          <div className="sr-only">
+            <input
+              type="checkbox" 
+              checked={isSelected}
+              onChange={onToggle}
+              aria-label={`Select ${title}`}
+            />
+          </div>
+        </div>
       </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="mt-auto"
-        onClick={onBegin}
-      >
-        BEGIN
-      </Button>
-    </div>
+    </Card>
   );
 };
 
