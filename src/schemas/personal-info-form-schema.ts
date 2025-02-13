@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-export const rtootFormSchema = z.object({
+export const personalInfoFormSchema = z.object({
   organisations: z
     .array(z.string())
     .min(1, "Please select at least one company"),
@@ -34,4 +34,4 @@ export const rtootFormSchema = z.object({
   signature: z.string().optional(),
 });
 
-export type RTOOTFormValues = z.infer<typeof rtootFormSchema>;
+export type PersonalInfoFormValues = z.infer<typeof personalInfoFormSchema>;
