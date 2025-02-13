@@ -1,20 +1,23 @@
 "use server";
 
-import { RTBFFormValues } from "@/schemas/rtbf-form-schema";
 import {
   sendDeliveryConfirmationEmail,
   sendMailRequest,
 } from "../../client/email/mailgun";
-import { generateRtbfLetters } from "@/schemas/rtbf-letter-template";
+import { generateLetters } from "@/templates/request-template";
 import { Organisation } from "@prisma/client";
 import { prisma, TransactionClient, SubmitResult } from "@/utils/prismaClient";
 import { LetterOutput } from "@/types/general";
+import { RequestType } from "@/types/requests";
+import { PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
+import { RTBHFormValues } from "@/schemas/rtbh-form-schema";
 
-export const submitRTBF = async (
-  formValues: RTBFFormValues
+export const submitRequest = async (
+  formValues: PersonalInfoFormValues & Partial<RTBHFormValues>,
+  requests: RequestType[]
 ): Promise<SubmitResult> => {
   try {
-    console.log("Starting transaction for RTBF submission");
+    console.log("Starting transaction for Right Adherence submission");
 
     const result = await prisma.$transaction(async (tx: TransactionClient) => {
       console.log("Upserting user");
@@ -49,7 +52,7 @@ export const submitRTBF = async (
       });
 
       console.log("Generating letters");
-      const letters = generateRtbfLetters(formValues);
+      const letters = generateLetters(formValues, requests);
 
       console.log("Sending emails and creating threads");
       const emailPromises = targetOrganisations.map(
