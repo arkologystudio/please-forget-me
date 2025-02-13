@@ -31,7 +31,7 @@ import {
 } from "@/app/actions/email-verification";
 import { organisations } from "@/constants/organisation";
 
-export function MainForm({ closeForm }: { closeForm: () => void }) {
+export function MainForm({ selectedForms, closeForm }: { selectedForms: string[], closeForm: () => void }) {
   const [step, setStep] = useState(1);
   const TOTAL_STEPS = 4;
   // const [isSignatureConfirmed, setIsSignatureConfirmed] = useState(false);
@@ -63,6 +63,7 @@ export function MainForm({ closeForm }: { closeForm: () => void }) {
       email: "",
       country: "",
       birthDate: "",
+      evidence: {},
       authorization: false,
     },
     mode: "onChange",
@@ -95,6 +96,21 @@ export function MainForm({ closeForm }: { closeForm: () => void }) {
   };
 
   const isStep3Valid = () => {
+    const values = form.getValues();
+    const isValid = !!(
+      values.firstName?.trim() &&
+      values.lastName?.trim() &&
+      values.email?.trim() &&
+      values.birthDate?.trim() &&
+      values.country?.trim()
+    );
+    if (!isValid) {
+      console.log("Step 3 is not valid:", values);
+    }
+    return isValid;
+  };
+
+  const isStep4Valid = () => {
     const values = form.getValues();
     const isValid = !!values.authorization;
     if (!isValid) {
@@ -453,6 +469,203 @@ const step3 = () => {
 
   return (
     <>
+              <div className="mb-8">
+        <h2 className="text-2xl font-bold tracking-tight mb-2">
+        System Interaction Details
+        </h2>
+        <p className="font-medium text-muted-foreground">
+        The following information assists AI organisations to prevent their models from revealing your personal information.
+        </p>
+        <div className="h-px bg-border mt-6" />
+            </div>
+
+              <FormField
+                control={form.control}
+                name="prompts"
+                rules={{ required: "At least one prompt is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="prompts">
+                      Prompts Used (Separate by comma)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        id="prompts"
+                        placeholder="Prompts that reveal your personal data (e.g., 'Where does Joe Shmoe live?')"
+                        value={field.value?.[field.value.length - 1] || ""}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          field.onChange(newValue ? [newValue] : []);
+                        }}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+            <div className="space-y-4">
+              {form.watch("organisations").map((organisationId) => {
+                const organisation = organisationsWithEvidenceFields.find(
+                  (c) => c.slug === organisationId
+                );
+                if (!organisation) return null;
+
+                return (
+                  <div key={organisationId} className="border rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const element = document.getElementById(
+                          `org-content-${organisationId}`
+                        );
+                        element?.classList.toggle("hidden");
+                      }}
+                      className="w-full px-4 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors rounded-lg"
+                    >
+                      <h3 className="font-medium">
+                        {organisation.label} Evidence
+                      </h3>
+                      <svg
+                        className="w-5 h-5 text-slate-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    <div
+                      id={`org-content-${organisationId}`}
+                      className="hidden px-4 py-3 space-y-4 border-t"
+                    >
+                      {organisation.evidenceFields.chatLinks && (
+                        <FormField
+                          control={form.control}
+                          name={`evidence.${organisationId}.chatLinks`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel
+                                htmlFor={`${organisation.slug}-chatlinks`}
+                              >
+                                {organisation.evidenceFields.chatLinks?.label}
+                              </FormLabel>
+                              <div className="space-y-2">
+                                {(!field.value?.length
+                                  ? [""]
+                                  : field.value
+                                ).map((link, index) => (
+                                  <div key={index} className="flex gap-2">
+                                    <FormControl>
+                                      <Input
+                                        id={`${organisation.slug}-chatlinks-${index}`}
+                                        placeholder={
+                                          organisation.evidenceFields.chatLinks
+                                            ?.placeholder
+                                        }
+                                        value={link}
+                                        onChange={(e) => {
+                                          const newLinks = [
+                                            ...(field.value || []),
+                                          ];
+                                          newLinks[index] = e.target.value;
+                                          field.onChange(newLinks);
+                                        }}
+                                      />
+                                    </FormControl>
+                                    {(field.value || []).length > 1 && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                          const newLinks =
+                                            field.value?.filter(
+                                              (_, i) => i !== index
+                                            ) || [];
+                                          field.onChange(newLinks);
+                                        }}
+                                      >
+                                        ✕
+                                      </Button>
+                                    )}
+                                  </div>
+                                ))}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    field.onChange([
+                                      ...(field.value || []),
+                                      "",
+                                    ]);
+                                  }}
+                                >
+                                  Add Another Link
+                                </Button>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      <FormField
+                        control={form.control}
+                        name={`evidence.${organisationId}.additionalNotes`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel
+                              htmlFor={`${organisation.slug}-additional-notes`}
+                            >
+                              Additional Notes (Optional)
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                id={`${organisation.slug}-additional-notes`}
+                                placeholder="Any additional context or information..."
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex space-x-2">
+              <Button type="button" variant="outline" onClick={prevStep}>
+                Back
+              </Button>
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={!isStep2Valid()}
+              >
+                Continue
+              </Button>
+            </div>
+            </>
+  )
+}
+
+
+const step4 = () => {
+  if (step !== 3) return null;
+
+  return (
+    <>
             <div className="space-y-8">
               <div>
                 <h3 className="text-lg font-medium">
@@ -538,7 +751,7 @@ const step3 = () => {
   )
 }
 
-const step4 = () => {
+const step5 = () => {
   if (step !== 4) return null;
 
   return (
@@ -646,9 +859,9 @@ const step4 = () => {
       </button>
       {step1()}
       {step2()}
-      {step3()}
+      {selectedForms.includes("RTBH") && step3()}
       {step4()}
-
+      {step5()}
       </form>
     </Form>
   );

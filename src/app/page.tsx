@@ -8,12 +8,12 @@ import ServicePane from "@/components/ui/service-pane";
 import { Button } from "@/components/ui/button";
 import { MainForm } from "@/components/main-form";
 
-type FormType = "form1" | "form2" | "form3";
+type FormType =  "RTOOT" | "RTBH" | "RTBF";
 
 export default function Home() {
   const [showMore, setShowMore] = React.useState(false);
   const [showForm, setShowForm] = React.useState<boolean>(false);
-  const [selectedForms, setSelectedForms] = React.useState<FormType[]>(['form1']);
+  const [selectedForms, setSelectedForms] = React.useState<FormType[]>(['RTOOT']);
 
   const scrollToForm = () => {
     const formSection = document.getElementById("form-section");
@@ -107,7 +107,7 @@ export default function Home() {
         <div className={`container mx-auto px-8 py-8 bg-slate-100 rounded-lg space-y-8 flex flex-col items-center transition-all duration-300 ${showForm ? 'max-w-2xl' : 'max-w-6xl'}`}>
           {showForm ? (
             <div className="w-full">
-              <MainForm closeForm={() => setShowForm(false)} />
+              <MainForm selectedForms={selectedForms} closeForm={() => setShowForm(false)} />
 
             </div>
           ) : (
@@ -116,22 +116,22 @@ export default function Home() {
                 <ServicePane
                   title="Opt Out of Training Request"
                   description="Request that your personal data is excluded from any processes involved in training AI systems."
-                  isSelected={selectedForms.includes('form1')}
-                  onToggle={() => toggleFormSelection('form1')}
-                />
-                
-                <ServicePane
-                  title="Right to be Forgotten Request"
-                  description="Request that your personal data be erased from the organization's records and no longer processed or used."
-                  isSelected={selectedForms.includes('form2')}
-                  onToggle={() => toggleFormSelection('form2')}
+                  isSelected={selectedForms.includes('RTOOT')}
+                  onToggle={() => toggleFormSelection('RTOOT')}
                 />
                 
                 <ServicePane
                   title="Right to be Hidden Request"
                   description="Request that AI models do not produce outputs containing your personal data."
-                  isSelected={selectedForms.includes('form3')}
-                  onToggle={() => toggleFormSelection('form3')}
+                  isSelected={selectedForms.includes('RTBH')}
+                  onToggle={() => toggleFormSelection('RTBH')}
+                />
+
+              <ServicePane
+                  title="Right to be Forgotten Request"
+                  description="Request that your personal data be erased from the organization's records and no longer processed or used."
+                  isSelected={selectedForms.includes('RTBF')}
+                  onToggle={() => toggleFormSelection('RTBF')}
                 />
               </div>
 
