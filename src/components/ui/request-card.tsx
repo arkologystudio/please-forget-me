@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "./card";
 
-interface ServicePaneProps {
+interface RequestCardProps {
   title: string;
   description: string;
   isSelected: boolean;
@@ -10,7 +10,7 @@ interface ServicePaneProps {
   width?: string;
 }
 
-const ServicePane: React.FC<ServicePaneProps> = ({
+const RequestCard: React.FC<RequestCardProps> = ({
   title,
   description,
   isSelected,
@@ -41,4 +41,4 @@ const ServicePane: React.FC<ServicePaneProps> = ({
   );
 };
 
-export default ServicePane;
+export default RequestCard;

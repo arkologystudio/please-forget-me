@@ -29,11 +29,14 @@ import {
   requestEmailVerification,
   verifyEmailCode,
 } from "@/app/actions/email-verification";
-import { organisations } from "@/constants/organisation";
+import { organisations, organisationsWithEvidenceFields } from "@/constants/organisation";
+import { z } from "zod";
+import { personalInfoFormSchema, PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
+import { rtbhFormSchema, RTBHFormValues } from "@/schemas/rtbh-form-schema";
 
 export function MainForm({ selectedForms, closeForm }: { selectedForms: string[], closeForm: () => void }) {
   const [step, setStep] = useState(1);
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 5;
   // const [isSignatureConfirmed, setIsSignatureConfirmed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -54,8 +57,13 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
     setCardIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  const form = useForm<MainFormValues>({
-    resolver: zodResolver(MainFormSchema),
+  const form = useForm<PersonalInfoFormValues & RTBHFormValues>({
+    resolver: zodResolver(
+      z.object({
+        ...personalInfoFormSchema.shape,
+        ...(selectedForms.includes("RTBH") ? rtbhFormSchema.shape : {}),
+      })
+    ),
     defaultValues: {
       organisations: [],
       firstName: "",
@@ -63,8 +71,11 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
       email: "",
       country: "",
       birthDate: "",
-      evidence: {},
       authorization: false,
+      ...(selectedForms.includes("RTBH") && {
+        prompts: [],
+        evidence: {},
+      }),
     },
     mode: "onChange",
   });
@@ -96,14 +107,14 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
   };
 
   const isStep3Valid = () => {
+    if (!selectedForms.includes("RTBH")) return true;
+    
     const values = form.getValues();
     const isValid = !!(
-      values.firstName?.trim() &&
-      values.lastName?.trim() &&
-      values.email?.trim() &&
-      values.birthDate?.trim() &&
-      values.country?.trim()
+      values.prompts?.length > 0 &&
+      Object.keys(values.evidence || {}).length > 0
     );
+    
     if (!isValid) {
       console.log("Step 3 is not valid:", values);
     }
@@ -122,7 +133,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
   //////////////////////////////
   // FORM SUBMISSION
   //////////////////////////////
-  async function onSubmit(data: MainFormValues) {
+  async function onSubmit(data: PersonalInfoFormValues & RTBHFormValues) {
     console.log("Form submission started", {
       data,
       isValid: form.formState.isValid,
@@ -142,17 +153,19 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
       }
 
       console.log("Calling submitRTBF...");
-      const response = //await submitRequest(data, request_type);
-      // console.log("submitRTBF response:", response);
+      const requests = selectedForms.map((form) => requests[form]);
+      console.log("requests:", requests);
+      const response = await submitRequest(data, requests);
+      console.log("submitRTBF response:", response);
 
-      // if (!response.success) {
-      //   throw new Error(response.error || "Failed to submit request");
-      // }
+      if (!response.success) {
+        throw new Error(response.error || "Failed to submit request");
+      }
 
-      // toast({
-      //   title: "Success!",
-      //   description: "Your request has been submitted successfully.",
-      // });
+      toast({
+        title: "Success!",
+        description: "Your request has been submitted successfully.",
+      });
 
       window.location.href = "/success";
     } catch (error) {
@@ -240,10 +253,16 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
         <CardContent className="space-y-2">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="font-medium">Request Type</p>
-              <p className="text-muted-foreground">
-                Right to Be Forgotten (Right to Erasure)
-              </p>
+              <p className="font-medium">Requests</p>
+              <div className="text-muted-foreground">
+                {selectedForms.map((form) => (
+                  <p key={form}>
+                    {form === "RTBF" ? "Right to Be Forgotten (Right to Erasure)" : 
+                     form === "RTBH" ? "Right to Be Hidden" :
+                     form === "RTOOT" ? "Opt Out of AI Training" : form}
+                  </p>
+                ))}
+              </div>
             </div>
             <div>
               <p className="font-medium">Est. Response Time</p>
@@ -321,9 +340,9 @@ const step1 = () => {
                     const allOrgs = organisations.map((org) => org.slug);
                     const currentValue = form.getValues("organisations");
                     if (currentValue.length === organisations.length) {
-                      form.setValue("organisations", []);
+                      form.setValue("organisations", [], { shouldValidate: true });
                     } else {
-                      form.setValue("organisations", allOrgs);
+                      form.setValue("organisations", allOrgs, { shouldValidate: true });
                     }
                   }}
                 >
@@ -338,6 +357,10 @@ const step1 = () => {
           </FormItem>
         )}
       />
+      <Progress
+          value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
+          className="mb-6 animate-in fade-in duration-500"
+        />
       <div className="flex space-x-2">
           <Button
             type="button"
@@ -447,6 +470,10 @@ const step2 = () => {
                 </FormItem>
               )}
             />
+            <Progress
+          value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
+          className="mb-6 animate-in fade-in duration-500"
+        />
 
             <div className="flex space-x-2">
               <Button type="button" variant="outline" onClick={prevStep}>
@@ -454,7 +481,7 @@ const step2 = () => {
               </Button>
               <Button
                 type="button"
-                onClick={nextStep}
+                onClick={selectedForms.includes("RTBH") ? nextStep : () => setStep(step+2)}
                 disabled={!isStep2Valid()}
               >
                 Continue
@@ -465,13 +492,14 @@ const step2 = () => {
 }
 
 const step3 = () => {
-  if (step !== 3) return null;
-
+  console.log("Selected Forms", selectedForms);
+  console.log("Step", step);
+  if (step !== 3 || !selectedForms.includes("RTBH")) return null;
   return (
     <>
               <div className="mb-8">
         <h2 className="text-2xl font-bold tracking-tight mb-2">
-        System Interaction Details
+        System Interaction Details (Right to be Hidden)
         </h2>
         <p className="font-medium text-muted-foreground">
         The following information assists AI organisations to prevent their models from revealing your personal information.
@@ -544,7 +572,7 @@ const step3 = () => {
 
                     <div
                       id={`org-content-${organisationId}`}
-                      className="hidden px-4 py-3 space-y-4 border-t"
+                      className="hidden px-4 py-3 space-y-4 border-t bg-slate-50"
                     >
                       {organisation.evidenceFields.chatLinks && (
                         <FormField
@@ -643,6 +671,10 @@ const step3 = () => {
                 );
               })}
             </div>
+            <Progress
+          value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
+          className="mb-6 animate-in fade-in duration-500"
+        />
 
             <div className="flex space-x-2">
               <Button type="button" variant="outline" onClick={prevStep}>
@@ -651,7 +683,7 @@ const step3 = () => {
               <Button
                 type="button"
                 onClick={nextStep}
-                disabled={!isStep2Valid()}
+                disabled={!isStep3Valid()}
               >
                 Continue
               </Button>
@@ -662,34 +694,25 @@ const step3 = () => {
 
 
 const step4 = () => {
-  if (step !== 3) return null;
+  if (step !== 4) return null;
 
   return (
     <>
             <div className="space-y-8">
-              <div>
-                <h3 className="text-lg font-medium">
-                  Almost there! Please review your requests below:
-                </h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Request {cardIndex + 1} of{" "}
-                  {form.getValues("organisations").length}
-                </p>
-              </div>
-
-              <div className="mb-8">
-        <h2 className="text-2xl font-bold tracking-tight mb-2">
+              
+            <h2 className="text-2xl font-bold tracking-tight">
           Review Requests
         </h2>
-        <p className="text-sm text-muted-foreground mt-2">
+              
+        <div className="h-px bg-border" />
+
+      <p className="text-sm text-muted-foreground">
                   Request {cardIndex + 1} of{" "}
                   {form.getValues("organisations").length}
                 </p>
-        <div className="h-px bg-border mt-6" />
-      </div>
 
               {generateSummaryCard(form.getValues())}
-
+              {form.getValues("organisations").length > 1 && (
               <div className="flex space-x-2">
                 <Button
                   type="button"
@@ -708,7 +731,7 @@ const step4 = () => {
                 >
                   Next Request
                 </Button>
-              </div>
+              </div>)}
 
               <FormField
                 control={form.control}
@@ -732,6 +755,10 @@ const step4 = () => {
                   </FormItem>
                 )}
               />
+              <Progress
+          value={((step - 1) / (TOTAL_STEPS - 1)) * 100}
+          className="mb-6 animate-in fade-in duration-500"
+        />
 
               <div className="flex space-x-2">
                 <Button type="button" variant="outline" onClick={prevStep}>
@@ -740,7 +767,7 @@ const step4 = () => {
                 <Button
                   type="button"
                   className="flex-1"
-                  disabled={!isStep3Valid()}
+                  disabled={!isStep4Valid()}
                   onClick={nextStep}
                 >
                   Next
@@ -752,7 +779,7 @@ const step4 = () => {
 }
 
 const step5 = () => {
-  if (step !== 4) return null;
+  if (step !== 5) return null;
 
   return (
     <>
@@ -804,20 +831,19 @@ const step5 = () => {
                 )}
               </div>
               <div className="h-4" />
+              
+
               <div className="border-t border-border" />
               <div className="flex space-x-2">
-                <Button type="button" variant="outline" onClick={prevStep}>
+                <Button type="button" variant="outline" onClick={selectedForms.includes("RTBH") ? prevStep : () => setStep(step-2)}>
                   Back
                 </Button>
-                <button
-                  onClick={() => console.log(form.getValues(), isVerified)}
-                >
-                  test
-                </button>
+                
                 <Button
                   type="submit"
                   className="flex-1"
                   disabled={!isVerified || isSubmitting}
+                  onClick={() => onSubmit(form.getValues())}
                 >
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
@@ -859,7 +885,7 @@ const step5 = () => {
       </button>
       {step1()}
       {step2()}
-      {selectedForms.includes("RTBH") && step3()}
+      {step3()}
       {step4()}
       {step5()}
       </form>

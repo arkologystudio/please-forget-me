@@ -24,7 +24,7 @@ ${requests
       request.description
     }`;
     if (
-      request.label === "rtbh" &&
+      request.label === "RTBH" &&
       "reasons" in data &&
       "prompts" in data &&
       "evidence" in data
