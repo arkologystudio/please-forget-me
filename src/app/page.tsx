@@ -107,6 +107,8 @@ export default function Home() {
             </div>
           ) : (
             <>
+              <h2 className="text-3xl font-semibold text-slate-900 text-center">Exercise your Rights</h2>
+              <p className="text-lg text-slate-600 text-center mt-2">Start by selecting one or more request types below</p>
               <div className="flex flex-col md:flex-row gap-8 py-8">
                 <RequestCard
                   title="Opt Out of Training Request"

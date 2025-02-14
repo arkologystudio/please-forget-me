@@ -4,6 +4,8 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { CheckCircledIcon } from "@radix-ui/react-icons";
+
 import {
   Form,
   FormControl,
@@ -45,6 +47,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
   const [verificationSent, setVerificationSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerified, setIsVerified] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [cardIndex, setCardIndex] = useState(0);
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
@@ -87,6 +90,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
   const isStep1Valid = () => {
     const values = form.getValues();
     const isValid = values.organisations.length > 0;
+    console.log("Step 1 Valid:", isValid);
     if (!isValid) {
       console.log("Step 1 is not valid:", values);
     }
@@ -102,6 +106,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
       values.birthDate?.trim() &&
       values.country?.trim()
     );
+    console.log("Step 2 Valid:", isValid);
     if (!isValid) {
       console.log("Step 2 is not valid:", values);
     }
@@ -109,7 +114,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
   };
 
   const isStep3Valid = () => {
-    if (!selectedForms.includes("RTBH")) return true;
+    if (!selectedForms.includes("rtbh")) return true;
     
     const values = form.getValues();
     const isValid = !!(
@@ -120,14 +125,18 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
     if (!isValid) {
       console.log("Step 3 is not valid:", values);
     }
+
+    console.log("Step 3 Valid:", isValid);
+
     return isValid;
   };
 
   const isStep4Valid = () => {
     const values = form.getValues();
     const isValid = !!values.authorization;
+    console.log("Step 4 Valid:", isValid);
     if (!isValid) {
-      console.log("Step 3 is not valid:", values);
+      console.log("Step 4 is not valid:", values);
     }
     return isValid;
   };
@@ -139,6 +148,8 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
     console.log("Form submission started", {
       data,
       isValid: form.formState.isValid,
+      selectedForms,
+      selectedRequests: selectedForms.map((form) => requests[form])
     });
     try {
       setIsSubmitting(true);
@@ -169,7 +180,8 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
         description: "Your request has been submitted successfully.",
       });
 
-      window.location.href = "/success";
+      setShowSuccess(true);
+
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
@@ -276,6 +288,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
     );
   };
 
+  // ORGANISATION SELECTION
 const step1 = () => {
   if (step !== 1) return null;
 
@@ -285,8 +298,16 @@ const step1 = () => {
         <h2 className="text-2xl font-bold tracking-tight mb-2">
           Select Organisations
         </h2>
-        <p className="font-medium text-muted-foreground">
-          Which organisations would you like this request to?
+        <p className="text-lg text-muted-foreground">
+          Which companies would you like to make your request to?
+        </p>
+        <p className="text-sm text-muted-foreground flex items-center gap-2 mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+          Only select companies that you have an account with
         </p>
         <div className="h-px bg-border mt-6" />
       </div>
@@ -297,7 +318,6 @@ const step1 = () => {
         render={() => (
           <FormItem>
             <div className="space-y-4">
-              <FormLabel>Dear,</FormLabel>
               <div className="space-y-2">
                 {organisations.map((organisation) => (
                   <FormField
@@ -305,7 +325,7 @@ const step1 = () => {
                     control={form.control}
                     name="organisations"
                     render={({ field }) => (
-                      <FormItem className="flex items-center space-x-3">
+                      <FormItem className="flex items-center space-x-3 cursor-pointer">
                         <FormControl>
                           <Checkbox
                             checked={field.value?.includes(
@@ -326,7 +346,7 @@ const step1 = () => {
                             }}
                           />
                         </FormControl>
-                        <FormLabel className={""}>
+                        <FormLabel className="cursor-pointer">
                           {organisation.label}
                         </FormLabel>
                       </FormItem>
@@ -337,7 +357,7 @@ const step1 = () => {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="mb-2"
+                  className="mb-2 cursor-pointer"
                   onClick={() => {
                     const allOrgs = organisations.map((org) => org.slug);
                     const currentValue = form.getValues("organisations");
@@ -376,6 +396,7 @@ const step1 = () => {
   );
 };
 
+// PERSONAL INFO
 const step2 = () => {
   if (step !== 2) return null;
 
@@ -385,11 +406,18 @@ const step2 = () => {
         <h2 className="text-2xl font-bold tracking-tight mb-2">
           Personal Information
         </h2>
-        <p className="font-medium text-muted-foreground">
-        The following information is included in your Right to be
-                Forgotten request to ensure organisations can 1) identify you
-                and 2) remove your personal data from their systems.
+        <p className="text-lg text-muted-foreground">
+       The following information enables the selected companies to correctly identify you on their systems.
         </p>
+        <p className="text-sm text-muted-foreground flex items-center gap-2 mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+          This site will never reveal your personal information to third parties.
+        </p>
+        
         <div className="h-px bg-border mt-6" />
       </div>
 
@@ -493,9 +521,9 @@ const step2 = () => {
   )
 }
 
+// RTBH
 const step3 = () => {
-  console.log("Selected Forms", selectedForms);
-  console.log("Step", step);
+
   if (step !== 3 || !selectedForms.includes("rtbh")) return null;
   return (
     <>
@@ -503,8 +531,16 @@ const step3 = () => {
         <h2 className="text-2xl font-bold tracking-tight mb-2">
         System Interaction Details (Right to be Hidden)
         </h2>
-        <p className="font-medium text-muted-foreground">
-        The following information assists AI organisations to prevent their models from revealing your personal information.
+        <p className="text-lg text-muted-foreground">
+        The following information assists AI companies to prevent their models from revealing your personal information.
+        </p>
+        <p className="text-sm text-muted-foreground flex items-center gap-2 mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+          Try to provide as much information as possible to increase your chance that companies honour your request. 
         </p>
         <div className="h-px bg-border mt-6" />
             </div>
@@ -543,7 +579,7 @@ const step3 = () => {
                 if (!organisation) return null;
 
                 return (
-                  <div key={organisationId} className="border rounded-lg">
+                  <div key={organisationId} className="border rounded-lg bg-white">
                     <button
                       type="button"
                       onClick={() => {
@@ -694,7 +730,6 @@ const step3 = () => {
   )
 }
 
-
 const step4 = () => {
   if (step !== 4) return null;
 
@@ -785,112 +820,162 @@ const step5 = () => {
 
   return (
     <>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium">
-                  Let&apos;s verify your request to make sure it&apos;s you.
-                </h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  We&apos;ll send a verification code to{" "}
-                  {form.getValues("email")}
-                </p>
-              </div>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-2xl font-bold tracking-tight">
+            Verify Your Request
+          </h3>
+          <p className="text-lg text-muted-foreground">
+            We&apos;ll send a verification code to{" "}
+            {form.getValues("email")}
+          </p>
+          <p className="text-sm text-muted-foreground flex items-center gap-2 mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+          Remember to check your spam inbox if you can't find the code.
+        </p>
+        </div>
 
-              <div className="space-y-4">
-                {!verificationSent ? (
-                  <Button type="button" onClick={handleSendVerificationCode}>
-                    Send Verification Code
-                  </Button>
-                ) : (
-                  <div className="space-y-4">
-                    <FormField
-                      name="verificationCode"
-                      render={() => (
-                        <FormItem>
-                          <FormLabel>Verification Code</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter the code sent to your email"
-                              value={verificationCode}
-                              onChange={(e) =>
-                                setVerificationCode(e.target.value)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button
-                      type="button"
-                      onClick={handleVerifyCode}
-                      disabled={!verificationCode}
-                    >
-                      Verify Code
-                    </Button>
-                  </div>
+        <div className="space-y-4">
+          {!verificationSent ? (
+            <Button 
+              type="button" 
+              onClick={handleSendVerificationCode}
+              disabled={isVerified}
+            >
+              Send Verification Code
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <FormField
+                name="verificationCode"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Verification Code</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter the code sent to your email"
+                        value={verificationCode}
+                        onChange={(e) =>
+                          setVerificationCode(e.target.value)
+                        }
+                        disabled={isVerified}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-              <div className="h-4" />
-              
+              />
 
-              <div className="border-t border-border" />
-              <div className="flex space-x-2">
-                <Button type="button" variant="outline" onClick={selectedForms.includes("RTBH") ? prevStep : () => setStep(step-2)}>
-                  Back
-                </Button>
-                
-                <Button
-                  type="submit"
-                  className="flex-1"
-                  disabled={!isVerified || isSubmitting}
-                  onClick={() => onSubmit(form.getValues())}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit"}
-                </Button>
-              </div>
+              <Button
+                type="button"
+                onClick={handleVerifyCode}
+                disabled={!verificationCode || isVerified}
+              >
+                Verify Code
+              </Button>
             </div>
-          </>
+          )}
+        </div>
+        <div className="h-4" />
+        
+
+        <div className="border-t border-border" />
+        <div className="flex space-x-2">
+          <Button type="button" variant="outline" onClick={selectedForms.includes("RTBH") ? prevStep : () => setStep(step-2)}>
+            Back
+          </Button>
+          
+          <Button
+            type="submit"
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            disabled={!isVerified || isSubmitting}
+            onClick={() => onSubmit(form.getValues())}
+          >
+            {isSubmitting ? "Submitting..." : "Submit Requests"}
+          </Button>
+        </div>
+      </div>
+    </>
   )
 }
 
+const success = () => {
+  return (
+    <div>
+      <div className="flex justify-center">
+            <CheckCircledIcon className="h-16 w-16 text-green-500" />
+          </div>
+
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
+            Request Submitted Successfully!
+          </h1>
+
+          <div className="space-y-4 text-slate-600">
+            <p className="text-lg">
+              Your request has been sent to the selected organizations.
+            </p>
+
+            <p>
+              We&apos;ve sent a confirmation email to your inbox with details
+              about your request. Organizations typically respond within 14-28
+              days.
+            </p>
+          </div>
+
+          <div className="space-y-2 text-sm text-slate-500">
+            <p>Need to submit another request?</p>
+            <Button variant="outline" onClick={closeForm}>
+              Make another request
+            </Button>
+          </div>
+        </div>
+  
+  )
+}
   ////////////
   // FORM
   ////////////
   return (
-    <Form {...form}>
-      
-
-      <form className="space-y-8">
-      <button
-        type="button"
-        onClick={closeForm}
-        className="relative float-right -mt-4 -mr-4 w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 border border-border rounded-full transition-colors"
-        aria-label="Close form"
-      >
-        <span className="sr-only">Close</span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-      {step1()}
-      {step2()}
-      {step3()}
-      {step4()}
-      {step5()}
-      </form>
-    </Form>
+    <>
+      {showSuccess ? (
+        success()
+      ) : (
+        <Form {...form}>
+          <form className="space-y-8">
+            <button
+              type="button"
+              onClick={closeForm}
+              className="relative float-right -mt-4 -mr-4 w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 border border-border rounded-full transition-colors"
+              aria-label="Close form"
+            >
+              <span className="sr-only">Close</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            {step1()}
+            {step2()}
+            {step3()}
+            {step4()}
+            {step5()}
+          </form>
+        </Form>
+      )}
+    </>
   );
 }

@@ -9,7 +9,7 @@ const evidenceSchema = z.object({
 });
 
 export const rtbhFormSchema = z.object({
-  reasons: z.array(z.string()).min(1, "Please select at least one reason"),
+  // reasons: z.array(z.string()).min(1, "Please select at least one reason"),
 
   prompts: z.array(z.string()).min(1, "At least one prompt is required"),
   evidence: z.record(z.string(), evidenceSchema).optional(),

@@ -11,12 +11,27 @@ import { LetterOutput } from "@/types/general";
 import { RequestType } from "@/types/requests";
 import { PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
 import { RTBHFormValues } from "@/schemas/rtbh-form-schema";
+import { personalInfoFormSchema } from "@/schemas/personal-info-form-schema";
+import { rtbhFormSchema } from "@/schemas/rtbh-form-schema";
 
 export const submitRequest = async (
   formValues: PersonalInfoFormValues & Partial<RTBHFormValues>,
   requests: RequestType[]
 ): Promise<SubmitResult> => {
   try {
+    console.log("Validating input data:", {
+      formValues,
+      requests,
+      personalInfoValid: personalInfoFormSchema.safeParse(formValues),
+      rtbhValid: requests.some(req => req.label === 'rtbh')
+        ? rtbhFormSchema.safeParse(formValues)
+        : 'RTBH not included'
+    });
+
+    if (!formValues || !requests.length) {
+      throw new Error("Invalid form submission: Missing required data");
+    }
+
     console.log("Starting transaction for Right Adherence submission");
 
     const result = await prisma.$transaction(async (tx: TransactionClient) => {
