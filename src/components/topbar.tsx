@@ -11,8 +11,8 @@ const Topbar = () => {
           </div>
 
           {/* Middle section */}
-          <div className="hidden md:flex items-center space-x-6">
-          <Link href="/" className="text-xl font-semibold">
+          <div className="flex items-center space-x-6 justify-center">
+            <Link href="/" className="text-xl font-semibold">
               Please Forget Me
             </Link>
           </div>

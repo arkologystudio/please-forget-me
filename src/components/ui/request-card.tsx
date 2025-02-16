@@ -47,7 +47,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
       </div>
       <div className="p-6 flex flex-col" style={{ width: "300px" }}>
         <div>
-          <h2 className="text-2xl font-bold mb-2">{title}</h2>
+          <h2 className="text-2xl font-bold mb-2 px-2">{title}</h2>
           <p className="text-slate-600 mb-4">{description}</p>
         </div>
         <div className="sr-only">

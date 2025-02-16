@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { CheckCircledIcon } from "@radix-ui/react-icons";
+import Donate from "@/components/ui/donate";
 
 import {
   Form,
@@ -307,7 +308,7 @@ const step1 = () => {
             <path d="M12 16v-4"/>
             <path d="M12 8h.01"/>
           </svg>
-          Only select companies that you have an account with
+          Some requests such as Right to Be Forgotten only apply to that you have an account with.
         </p>
         <div className="h-px bg-border mt-6" />
       </div>
@@ -905,34 +906,39 @@ const step5 = () => {
 
 const success = () => {
   return (
-    <div>
+    <div className="space-y-8">
       <div className="flex justify-center">
-            <CheckCircledIcon className="h-16 w-16 text-green-500" />
-          </div>
+        <CheckCircledIcon className="h-12 w-12 text-green-500" />
+      </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-            Request Submitted Successfully!
-          </h1>
+      
 
-          <div className="space-y-4 text-slate-600">
-            <p className="text-lg">
-              Your request has been sent to the selected organizations.
-            </p>
+      <div className="space-y-4 text-slate-600">
+      <h1 className="text-2xl md:text-4xl font-bold text-slate-900 text-center">
+        Success!
+      </h1>
+        <p className="text-lg text-center">
+          Your request has been sent to the selected companies.
+        </p>
 
-            <p>
-              We&apos;ve sent a confirmation email to your inbox with details
-              about your request. Organizations typically respond within 14-28
-              days.
-            </p>
-          </div>
+        <p className="text-center">
+          Check your inbox for an email containing details about your request. We'll notify you about the status of your requests.
+        </p>
+      </div>
 
-          <div className="space-y-2 text-sm text-slate-500">
-            <p>Need to submit another request?</p>
-            <Button variant="outline" onClick={closeForm}>
-              Make another request
-            </Button>
-          </div>
+      <div className="flex flex-col items-center justify-center gap-8 text-sm text-slate-500">
+      <div className="flex flex-col items-center justify-center">
+          <Donate />
         </div>
+        <div className="flex flex-col items-center justify-center space-y-2">
+          <p>Want to make another request?</p>
+          <Button variant="outline" onClick={closeForm}>
+            Make another request
+          </Button>
+        </div>
+       
+      </div>
+    </div>
   
   )
 }
