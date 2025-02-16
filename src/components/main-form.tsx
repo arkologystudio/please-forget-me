@@ -33,7 +33,7 @@ import {
   verifyEmailCode,
 } from "@/app/actions/email-verification";
 import { organisations } from "../../prisma/organisations";
-import { organisationsWithEvidenceFields } from "@/constants/organisation";
+// import { organisationsWithEvidenceFields } from "@/constants/organisation";
 import { z } from "zod";
 import { personalInfoFormSchema, PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
 import { rtbhFormSchema, RTBHFormValues } from "@/schemas/rtbh-form-schema";
@@ -575,7 +575,7 @@ const step3 = () => {
 
             <div className="space-y-4">
               {form.watch("organisations").map((organisationId) => {
-                const organisation = organisationsWithEvidenceFields.find(
+                const organisation = organisations.find(
                   (c) => c.slug === organisationId
                 );
                 if (!organisation) return null;
