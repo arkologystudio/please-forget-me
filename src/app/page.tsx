@@ -72,7 +72,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-2xl md:text-4xl leading-tight text-slate-700 max-w-3xl mt-8">
-                Please Forget Me helps exercise your personal data rights against AI companies.
+                Please Forget Me helps exercise your personal data rights to AI companies.
               </p>
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <section className="bg-slate-900 py-16 flex justify-center flex-col items-center gap-8" id="form-section">
+      <section className="bg-slate-900 py-24 flex justify-center flex-col items-center gap-8 " id="form-section">
         <div className={`w-[calc(100%-2rem)] md:container px-8 py-8 bg-slate-100 rounded-lg space-y-2 flex flex-col items-center transition-all duration-300 ${showForm ? 'md:max-w-2xl' : 'md:max-w-6xl'}`}>
           {showForm ? (
             <div className="w-full">

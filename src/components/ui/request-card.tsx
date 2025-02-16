@@ -21,7 +21,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
       className={`cursor-pointer transition-all relative ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
       onClick={onToggle}
     >
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-3 right-3">
         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
           ${isSelected 
             ? 'border-blue-500 bg-blue-500' 
@@ -47,7 +47,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
       </div>
       <div className="p-6 flex flex-col" style={{ width: "300px" }}>
         <div>
-          <h2 className="text-2xl font-bold mb-2 px-2">{title}</h2>
+          <h2 className="text-2xl font-bold mb-2">{title}</h2>
           <p className="text-slate-600 mb-4">{description}</p>
         </div>
         <div className="sr-only">
