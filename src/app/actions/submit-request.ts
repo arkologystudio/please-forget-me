@@ -23,9 +23,9 @@ export const submitRequest = async (
       formValues,
       requests,
       personalInfoValid: personalInfoFormSchema.safeParse(formValues),
-      rtbhValid: requests.some(req => req.label === 'rtbh')
+      rtbhValid: requests.some((req) => req.label === "rtbh")
         ? rtbhFormSchema.safeParse(formValues)
-        : 'RTBH not included'
+        : "RTBH not included",
     });
 
     if (!formValues || !requests.length) {
@@ -69,19 +69,29 @@ export const submitRequest = async (
       console.log("Generating letters");
       const letters = generateLetters(formValues, requests);
 
-      console.log("Sending emails and creating threads");
+      console.log("Sending emails and creating threads", letters);
       const emailPromises = targetOrganisations.map(
         async (org: Organisation) => {
+          console.log("Letters: ", letters);
+          console.log("Organisations: ", targetOrganisations);
           const letter = letters.find(
             (letter: LetterOutput) => letter.to === org.email
           );
+
           if (!letter) {
-            throw new Error(`Letter not found for organisation: ${org.name}`);
+            console.error(`Letter not found for organisation: ${org.name}`);
+            return Promise.reject(
+              new Error(`Letter not found for organisation: ${org.name}`)
+            );
           }
 
           const emailContent = await sendMailRequest(letter, formValues);
-          if (!emailContent.message || !emailContent.id) {
-            throw new Error("Email content is undefined");
+
+          if (!emailContent || !emailContent.message || !emailContent.id) {
+            console.error("Email content is undefined or invalid");
+            return Promise.reject(
+              new Error("Email content is undefined or invalid")
+            );
           }
 
           console.log(`Creating thread for organisation: ${org.name}`);
