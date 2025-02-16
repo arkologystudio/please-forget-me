@@ -837,7 +837,7 @@ const step5 = () => {
             <path d="M12 16v-4"/>
             <path d="M12 8h.01"/>
           </svg>
-          Remember to check your spam inbox if you can't find the code.
+          Remember to check your spam inbox if you can&apos;t find the code.
         </p>
         </div>
 
@@ -923,7 +923,7 @@ const success = () => {
         </p>
 
         <p className="text-center">
-          Check your inbox for an email containing details about your request. We'll notify you about the status of your requests.
+          Check your inbox for an email containing details about your request. We&apos;ll notify you about the status of your requests.
         </p>
       </div>
 
