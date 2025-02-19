@@ -27,20 +27,20 @@ export const organisations = [
       },
     },
   },
-  {
-    name: "Google",
-    email: "apps-help@google.com",
-    slug: "google",
-    label: "Google (Gemini)",
-    id: 4,
-    evidenceFields: {
-      chatLinks: {
-        label: "Gemini Chat Links",
-        placeholder: "https://...", 
-        required: false,
-      },
-    },
-  },
+  // {
+  //   name: "Google",
+  //   email: "apps-help@google.com",
+  //   slug: "google",
+  //   label: "Google (Gemini)",
+  //   id: 4,
+  //   evidenceFields: {
+  //     chatLinks: {
+  //       label: "Gemini Chat Links",
+  //       placeholder: "https://...", 
+  //       required: false,
+  //     },
+  //   },
+  // },
   {
     name: "X",
     email: "privacy@x.ai",
