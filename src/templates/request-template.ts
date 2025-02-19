@@ -1,7 +1,7 @@
 import { OrganisationInput } from "@/types/organisation";
 import { type PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
 import { type RTBHFormValues } from "@/schemas/rtbh-form-schema";
-import { organisations } from "@/constants/organisation";
+import { organisations } from "../../prisma/organisations";
 import { LetterOutput } from "@/types/general";
 import { type RequestType } from "@/types/requests";
 
@@ -23,19 +23,13 @@ ${requests
     let requestDetails = `${index + 1}. ${request.label}: ${
       request.description
     }`;
-    if (
-      request.label === "rtbh" &&
-      "reasons" in data &&
-      "prompts" in data &&
-      "evidence" in data
-    ) {
-      const reasons = data.reasons?.join(", ") || "None";
+    if (request.label === "rtbh" && "prompts" in data && "evidence" in data) {
       const prompts = data.prompts?.join(", ") || "None";
       const chatLinks =
         data.evidence?.[organisation.slug]?.chatLinks?.join(", ") || "None";
       const additionalNotes =
         data.evidence?.[organisation.slug]?.additionalNotes || "None";
-      requestDetails += `\nReasons: ${reasons}\nPrompts: ${prompts}\nEvidence:\nChat links: ${chatLinks}\nAdditional notes: ${additionalNotes}`;
+      requestDetails += `Prompts: ${prompts}\nEvidence:\nChat links: ${chatLinks}\nAdditional notes: ${additionalNotes}`;
     }
     return requestDetails;
   })

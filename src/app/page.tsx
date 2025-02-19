@@ -47,7 +47,7 @@ export default function Home() {
                   AIs are learning about you.
                   <span
                     onClick={() => setShowMore(!showMore)}
-                    className="text-base text-slate-500 hover:text-slate-700 hover:bg-slate-200 transition-colors ml-4 cursor-pointer border border-slate-300 rounded-full px-3 py-1 "
+                    className="hidden md:inline-block text-base text-slate-500 hover:text-slate-700 hover:bg-slate-200 transition-colors ml-4 cursor-pointer border border-slate-300 rounded-full px-3 py-1"
                   >
                     How
                   </span>
@@ -72,9 +72,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-2xl md:text-4xl leading-tight text-slate-700 max-w-3xl mt-8">
-                Please Forget Me helps exercise your <i>Rights</i> and protects
-                your data online from AI companies, including OpenAI, Meta and
-                Google.
+                Please Forget Me helps exercise your personal data rights to AI companies.
               </p>
             </div>
           </div>
@@ -98,8 +96,8 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <section className="bg-slate-900 py-16 flex justify-center flex-col items-center gap-8" id="form-section">
-        <div className={`container mx-auto px-8 py-8 bg-slate-100 rounded-lg space-y-8 flex flex-col items-center transition-all duration-300 ${showForm ? 'max-w-2xl' : 'max-w-6xl'}`}>
+      <section className="bg-slate-900 py-24 flex justify-center flex-col items-center gap-8 " id="form-section">
+        <div className={`w-[calc(100%-2rem)] md:container px-8 py-8 bg-slate-100 rounded-lg space-y-2 flex flex-col items-center transition-all duration-300 ${showForm ? 'md:max-w-2xl' : 'md:max-w-6xl'}`}>
           {showForm ? (
             <div className="w-full">
               <MainForm selectedForms={selectedForms} closeForm={() => setShowForm(false)} />
@@ -107,6 +105,8 @@ export default function Home() {
             </div>
           ) : (
             <>
+              <h2 className="text-3xl font-semibold text-slate-900 text-center">Exercise your Rights</h2>
+              <p className="text-lg text-slate-600 text-center mt-2">Start by selecting one or more request types below</p>
               <div className="flex flex-col md:flex-row gap-8 py-8">
                 <RequestCard
                   title="Opt Out of Training Request"
@@ -142,7 +142,6 @@ export default function Home() {
             </>
           )}
         </div>
-        <Donate />
       
       </section>
       

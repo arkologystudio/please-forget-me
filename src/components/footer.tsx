@@ -46,10 +46,10 @@ const Footer = () => {
             <h3 className="font-semibold text-foreground">Contact</h3>
             <p className="text-sm text-muted-foreground">
               <a 
-                href="mailto:hello@pleaseforget.me"
+                href="mailto:admin@pleaseforget.me"
                 className="hover:text-foreground transition-colors"
               >
-                hello@pleaseforget.me
+                admin@pleaseforget.me  
               </a>
             </p>
           </div>
@@ -58,7 +58,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t text-center">
           <p className="text-sm text-muted-foreground">
-            © {currentYear} Arkology Studio. All rights reserved.
+            © {currentYear} Arkology. All rights reserved.
           </p>
         </div>
       </div>

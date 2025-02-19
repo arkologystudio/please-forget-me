@@ -11,12 +11,27 @@ import { LetterOutput } from "@/types/general";
 import { RequestType } from "@/types/requests";
 import { PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
 import { RTBHFormValues } from "@/schemas/rtbh-form-schema";
+import { personalInfoFormSchema } from "@/schemas/personal-info-form-schema";
+import { rtbhFormSchema } from "@/schemas/rtbh-form-schema";
 
 export const submitRequest = async (
   formValues: PersonalInfoFormValues & Partial<RTBHFormValues>,
   requests: RequestType[]
 ): Promise<SubmitResult> => {
   try {
+    console.log("Validating input data:", {
+      formValues,
+      requests,
+      personalInfoValid: personalInfoFormSchema.safeParse(formValues),
+      rtbhValid: requests.some((req) => req.label === "rtbh")
+        ? rtbhFormSchema.safeParse(formValues)
+        : "RTBH not included",
+    });
+
+    if (!formValues || !requests.length) {
+      throw new Error("Invalid form submission: Missing required data");
+    }
+
     console.log("Starting transaction for Right Adherence submission");
 
     const result = await prisma.$transaction(async (tx: TransactionClient) => {
@@ -54,19 +69,29 @@ export const submitRequest = async (
       console.log("Generating letters");
       const letters = generateLetters(formValues, requests);
 
-      console.log("Sending emails and creating threads");
+      console.log("Sending emails and creating threads", letters);
       const emailPromises = targetOrganisations.map(
         async (org: Organisation) => {
+          console.log("Letters: ", letters);
+          console.log("Organisations: ", targetOrganisations);
           const letter = letters.find(
             (letter: LetterOutput) => letter.to === org.email
           );
+
           if (!letter) {
-            throw new Error(`Letter not found for organisation: ${org.name}`);
+            console.error(`Letter not found for organisation: ${org.name}`);
+            return Promise.reject(
+              new Error(`Letter not found for organisation: ${org.name}`)
+            );
           }
 
           const emailContent = await sendMailRequest(letter, formValues);
-          if (!emailContent.message || !emailContent.id) {
-            throw new Error("Email content is undefined");
+
+          if (!emailContent || !emailContent.message || !emailContent.id) {
+            console.error("Email content is undefined or invalid");
+            return Promise.reject(
+              new Error("Email content is undefined or invalid")
+            );
           }
 
           console.log(`Creating thread for organisation: ${org.name}`);
