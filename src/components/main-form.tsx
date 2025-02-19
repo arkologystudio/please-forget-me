@@ -146,8 +146,8 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
 
   const isStep4Valid = () => {
     const values = form.getValues();
-    const isValid = !!values.authorization;
-    console.log("Step 4 Valid:", isValid);
+    const isValid = values.authorization === true;
+    console.log("Step 4 Valid:", isValid, "Authorization value:", values.authorization);
     if (!isValid) {
       console.log("Step 4 is not valid:", values);
     }
@@ -791,7 +791,7 @@ const step4 = () => {
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => field.onChange(checked)}
+                        onCheckedChange={(checked) => field.onChange(!!checked)}
                         required
                       />
                     </FormControl>

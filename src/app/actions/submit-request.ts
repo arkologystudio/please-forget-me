@@ -21,7 +21,7 @@ export const submitRequest = async (
       formValues,
       requests,
       personalInfoValid: personalInfoFormSchema.safeParse(formValues),
-      rtbhValid: requests.some((req) => req.label === "rtbh")
+      rtbhValid: requests.some((req) => req.type === "rtbh")
         ? rtbhFormSchema.safeParse(formValues)
         : "RTBH not included",
     });

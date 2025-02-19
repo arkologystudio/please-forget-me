@@ -1,4 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+// import { PrismaClient } from "@prisma/client";
+const { PrismaClient } = require("@prisma/client");
+
+
 import { organisations } from "./organisations";
 
 const prisma = new PrismaClient();
@@ -10,36 +13,33 @@ export type OrganisationDB = {
 };
 
 async function main() {
-  const createdOrgs: OrganisationDB[] = [];
+  const results: OrganisationDB[] = [];
 
   for (const org of organisations) {
-    const existingOrg = await prisma.organisation.findUnique({
+    const result = await prisma.organisation.upsert({
       where: { slug: org.slug },
-    });
-
-    if (existingOrg) {
-      console.log(`Organisation ${org.name} already exists:`, existingOrg);
-      continue;
-    }
-
-    const createdOrg = await prisma.organisation.create({
-      data: {
+      update: {
+        name: org.name,
+        email: org.email,
+      },
+      create: {
         name: org.name,
         email: org.email,
         slug: org.slug,
       },
     });
-    createdOrgs.push(createdOrg);
+    results.push(result);
+    console.log(`Upserted organisation ${org.name}:`, result);
   }
 
-  console.log("Created organisations:", createdOrgs);
+  console.log("Seed completed. Results:", results);
 }
+
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

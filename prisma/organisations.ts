@@ -22,42 +22,42 @@ export const organisations = [
     evidenceFields: {
       chatLinks: {
         label: "Claude Chat Links",
-        placeholder: "https://claude.ai/...", // TODO
+        placeholder: "https://claude.ai/...", 
         required: false,
       },
     },
   },
   {
     name: "Google",
-    email: "apps-help@google.com", //TODO: Change this to a real email
+    email: "apps-help@google.com",
     slug: "google",
     label: "Google (Gemini)",
     id: 4,
     evidenceFields: {
       chatLinks: {
         label: "Gemini Chat Links",
-        placeholder: "https://...", // TODO
+        placeholder: "https://...", 
         required: false,
       },
     },
   },
   {
     name: "X",
-    email: "support@x.ai", //TODO: Change this to a real email ##privacy@x.ai
+    email: "privacy@x.ai",
     slug: "x",
     label: "X (Grok)",
     id: 5,
     evidenceFields: {
       chatLinks: {
         label: "Grok Chat Links",
-        placeholder: "https://...", // TODO
+        placeholder: "https://...",
         required: false,
       },
     },
   },
   {
     name: "Perplexity",
-    email: "support@perplexity.ai", //TODO: Change this to a real email
+    email: "support@perplexity.ai",
     slug: "perplexity",
     label: "Perplexity",
     id: 6,
@@ -71,7 +71,7 @@ export const organisations = [
   },
   {
     name: "Mistral",
-    email: "privacy@mistral.ai", //TODO: Change this to a real email ##privacy@mistral.ai
+    email: "privacy@mistral.ai", 
     slug: "mistral",
     label: "Mistral (le Chat)",
     id: 7,
