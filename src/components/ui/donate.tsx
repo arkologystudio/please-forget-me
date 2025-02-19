@@ -11,11 +11,20 @@ const Donate: React.FC = () => {
   const { toast } = useToast();
   const [showCryptoOptions, setShowCryptoOptions] = React.useState(false);
 
-  const handleCopy = (address) => {
+  const handleCopy = (address: string | undefined) => {
+    if (!address) {
+      toast({
+        title: "Error",
+        description: "Donation address not found",
+        duration: 3000,
+      });
+      return;
+    }
     navigator.clipboard.writeText(address);
+    const truncatedAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
     toast({
-      title: `✓ Copied Address: ${address}`, //todo add address
-      description: `Thank you for your support!`,
+      title: `✓ Copied Address: ${truncatedAddress}`,
+      description: `Thank you for your support!`, 
       duration: 3000,
     });
   };
@@ -52,7 +61,7 @@ const Donate: React.FC = () => {
             className="w-full"
           >
             <Image src={EthereumLogo} alt="Ethereum Logo" width={20} height={20} className="mr-2" />
-            ETh
+            ETH
           </Button>
         </div>
       ) : (
