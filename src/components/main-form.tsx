@@ -52,8 +52,22 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
   const [showSuccess, setShowSuccess] = useState(false);
   const [cardIndex, setCardIndex] = useState(0);
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
-  const prevStep = () => setStep((prev) => Math.max(prev - 1, 0));
+  const getNextStep = (currentStep: number): number => {
+    if (currentStep === 2 && !selectedForms.includes("rtbh")) {
+      return 4; // Skip step 3 if rtbh is not selected
+    }
+    return Math.min(currentStep + 1, TOTAL_STEPS);
+  };
+
+  const getPrevStep = (currentStep: number): number => {
+    if (currentStep === 4 && !selectedForms.includes("rtbh")) {
+      return 2; // Skip step 3 if rtbh is not selected
+    }
+    return Math.max(currentStep - 1, 1);
+  };
+
+  const nextStep = () => setStep(getNextStep(step));
+  const prevStep = () => setStep(getPrevStep(step));
 
   const nextCard = () => {
     const selectedOrgs = form.getValues("organisations");
@@ -309,7 +323,7 @@ const step1 = () => {
             <path d="M12 16v-4"/>
             <path d="M12 8h.01"/>
           </svg>
-          Some requests such as Right to Be Forgotten only apply to that you have an account with.
+          Some requests such as Right to Be Forgotten only apply if you have an account with the organisation.
         </p>
         <div className="h-px bg-border mt-6" />
       </div>
@@ -513,7 +527,7 @@ const step2 = () => {
               </Button>
               <Button
                 type="button"
-                onClick={selectedForms.includes("rtbh") ? nextStep : () => setStep(step+2)}
+                onClick={nextStep}
                 disabled={!isStep2Valid()}
               >
                 Continue
@@ -887,7 +901,7 @@ const step5 = () => {
 
         <div className="border-t border-border" />
         <div className="flex space-x-2">
-          <Button type="button" variant="outline" onClick={selectedForms.includes("RTBH") ? prevStep : () => setStep(step-2)}>
+          <Button type="button" variant="outline" onClick={prevStep}>
             Back
           </Button>
           
