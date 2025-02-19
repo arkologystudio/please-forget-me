@@ -1,7 +1,7 @@
 export const organisations = [
   {
     name: "OpenAI",
-    email: "info@arkology.co.za", //TODO: Change this to a real email
+    email: "dsar@openai.com",
     slug: "openai",
     label: "OpenAI (ChatGPT)",
     id: 1,
@@ -15,7 +15,7 @@ export const organisations = [
   },
   {
     name: "Anthropic",
-    email: "admin@arkology.co.za", //TODO: Change this to a real email
+    email: "privacy@anthropic.com", 
     slug: "anthropic",
     label: "Anthropic (Claude)",
     id: 2,
@@ -28,22 +28,8 @@ export const organisations = [
     },
   },
   {
-    name: "Meta",
-    email: "test@arkology.co.za", //TODO: Change this to a real email
-    slug: "meta",
-    label: "Meta (LLama)",
-    id: 3,
-    evidenceFields: {
-      chatLinks: {
-        label: "LLama Chat Links",
-        placeholder: "https://...", // TODO
-        required: false,
-      },
-    },
-  },
-  {
     name: "Google",
-    email: "info@arkology.co.za", //TODO: Change this to a real email
+    email: "apps-help@google.com", //TODO: Change this to a real email
     slug: "google",
     label: "Google (Gemini)",
     id: 4,
@@ -57,7 +43,7 @@ export const organisations = [
   },
   {
     name: "X",
-    email: "info@arkology.co.za", //TODO: Change this to a real email ##privacy@x.ai
+    email: "support@x.ai", //TODO: Change this to a real email ##privacy@x.ai
     slug: "x",
     label: "X (Grok)",
     id: 5,
@@ -71,7 +57,7 @@ export const organisations = [
   },
   {
     name: "Perplexity",
-    email: "info@arkology.co.za", //TODO: Change this to a real email
+    email: "support@perplexity.ai", //TODO: Change this to a real email
     slug: "perplexity",
     label: "Perplexity",
     id: 6,
@@ -85,7 +71,7 @@ export const organisations = [
   },
   {
     name: "Mistral",
-    email: "info@arkology.co.za", //TODO: Change this to a real email ##privacy@mistral.ai
+    email: "privacy@mistral.ai", //TODO: Change this to a real email ##privacy@mistral.ai
     slug: "mistral",
     label: "Mistral (le Chat)",
     id: 7,
