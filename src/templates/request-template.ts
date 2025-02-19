@@ -10,30 +10,41 @@ const generateLetter = (
   organisation: OrganisationInput,
   requests: RequestType[]
 ): LetterOutput => {
-  const signatureHtml = data.signature
-    ? `\n<img src="${data.signature}" alt="Signature" style="max-width: 400px; height: auto;" />\n`
-    : "[No signature provided]";
+  // const signatureHtml = data.signature
+  //   ? `\n<img src="${data.signature}" alt="Signature" style="max-width: 400px; height: auto;" />\n`
+  //   : "[No signature provided]";
 
   const body = `Dear ${organisation.label},
 
-I am writing to request that you adhere to the following requests:
+I am writing to request that you adhere to the following requests, in accordance with my data protection rights:
 
 ${requests
   .map((request, index) => {
-    let requestDetails = `${index + 1}. ${request.label}: ${
-      request.description
-    }`;
-    if (request.label === "rtbh" && "prompts" in data && "evidence" in data) {
-      const prompts = data.prompts?.join(", ") || "None";
-      const chatLinks =
-        data.evidence?.[organisation.slug]?.chatLinks?.join(", ") || "None";
-      const additionalNotes =
-        data.evidence?.[organisation.slug]?.additionalNotes || "None";
-      requestDetails += `Prompts: ${prompts}\nEvidence:\nChat links: ${chatLinks}\nAdditional notes: ${additionalNotes}`;
+    let requestDetails = `${index + 1}. ${request.label}: ${request.description}`;
+    if (request.label === "rtbh" && "prompts" in data) {
+      const prompts = data.prompts?.join(", ");
+      // Get evidence specific to this organisation
+      const orgEvidence = data.evidence?.[organisation.slug];
+      const chatLinks = orgEvidence?.chatLinks?.join(", ");
+      const additionalNotes = orgEvidence?.additionalNotes;
+
+      if (prompts) {
+        requestDetails += `\n\nPrompts: ${prompts}`;
+      }
+
+      if (chatLinks || additionalNotes) {
+        requestDetails += "\n\nEvidence:";
+        if (chatLinks) {
+          requestDetails += `\nChat links: ${chatLinks}`;
+        }
+        if (additionalNotes) {
+          requestDetails += `\nAdditional notes: ${additionalNotes}`;
+        }
+      }
     }
     return requestDetails;
   })
-  .join("\n")}
+  .join("\n\n")}
 
 I confirm that I am the individual whose data this request concerns and I authorize Please Forget Me to submit this request on my behalf. 
 
@@ -43,10 +54,9 @@ Email: ${data.email}
 Country: ${data.country || "Not provided"}
 Date of Birth: ${data.birthDate}
 
+I look forward to receiving confirmation of this request, and a follow up that you have complied with my request within a reasonable time.
 
-I look forward to receiving confirmation of this request, and a follow up that you have complied with my request within one month.
-
-Best regards,
+Kindly,
 ${data.firstName} ${data.lastName}`;
 
   return {

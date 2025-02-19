@@ -18,9 +18,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
-  MainFormSchema,
-  type MainFormValues,
-} from "@/schemas/main-form-schema";
+  personalInfoFormSchema,
+  PersonalInfoFormValues,
+} from "@/schemas/personal-info-form-schema";
 import { Progress } from "@/components/ui/progress";
 import CountrySelect from "@/components/ui/country-select";
 
@@ -35,7 +35,7 @@ import {
 import { organisations } from "../../prisma/organisations";
 // import { organisationsWithEvidenceFields } from "@/constants/organisation";
 import { z } from "zod";
-import { personalInfoFormSchema, PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
+// import { MainFormSchema, PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
 import { rtbhFormSchema, RTBHFormValues } from "@/schemas/rtbh-form-schema";
 import { requests } from "@/constants/requests";
 
@@ -133,10 +133,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
     if (!selectedForms.includes("rtbh")) return true;
     
     const values = form.getValues();
-    const isValid = !!(
-      values.prompts?.length > 0 &&
-      Object.keys(values.evidence || {}).length > 0
-    );
+    const isValid = !!(values.prompts?.length > 0);
     
     if (!isValid) {
       console.log("Step 3 is not valid:", values);
@@ -170,7 +167,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
     try {
       setIsSubmitting(true);
       // Add artificial delay for UX
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       if (!isVerified) {
         console.log("Submission blocked: Email not verified");
         toast({
@@ -252,7 +249,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
           throw new Error(result.error || "Invalid verification code");
         }
       }
-
+      setVerificationCode(verificationCode)
       setIsVerified(true);
       toast({
         title: "Email Verified",
@@ -268,7 +265,7 @@ export function MainForm({ selectedForms, closeForm }: { selectedForms: string[]
     }
   };
 
-  const generateSummaryCard = (formData: MainFormValues) => {
+  const generateSummaryCard = (formData: PersonalInfoFormValues) => {
     const selectedOrgs = formData.organisations;
     if (selectedOrgs.length === 0) return null;
 
@@ -908,7 +905,7 @@ const step5 = () => {
           <Button
             type="submit"
             className="flex-1 bg-green-600 hover:bg-green-700"
-            disabled={!isVerified || isSubmitting}
+            disabled={process.env.NEXT_PUBLIC_IS_DEV !== "true" && (!isVerified || isSubmitting)}
             onClick={() => onSubmit(form.getValues())}
           >
             {isSubmitting ? "Submitting..." : "Submit Requests"}

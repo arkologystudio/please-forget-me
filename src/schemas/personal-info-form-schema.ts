@@ -31,7 +31,7 @@ export const personalInfoFormSchema = z.object({
   authorization: z.boolean().refine((val) => val === true, {
     message: "You must authorize the request",
   }),
-  signature: z.string().optional(),
+  // signature: z.string().optional(),
 });
 
 export type PersonalInfoFormValues = z.infer<typeof personalInfoFormSchema>;

@@ -5,14 +5,12 @@ import {
   sendMailRequest,
 } from "../../client/email/mailgun";
 import { generateLetters } from "@/templates/request-template";
-import { Organisation } from "@prisma/client";
+import { Organisation } from "../../../prisma/organisations";
 import { prisma, TransactionClient, SubmitResult } from "@/utils/prismaClient";
 import { LetterOutput } from "@/types/general";
 import { RequestType } from "@/types/requests";
-import { PersonalInfoFormValues } from "@/schemas/personal-info-form-schema";
-import { RTBHFormValues } from "@/schemas/rtbh-form-schema";
-import { personalInfoFormSchema } from "@/schemas/personal-info-form-schema";
-import { rtbhFormSchema } from "@/schemas/rtbh-form-schema";
+import { PersonalInfoFormValues, personalInfoFormSchema } from "@/schemas/personal-info-form-schema";
+import { RTBHFormValues,rtbhFormSchema} from "@/schemas/rtbh-form-schema";
 
 export const submitRequest = async (
   formValues: PersonalInfoFormValues & Partial<RTBHFormValues>,
