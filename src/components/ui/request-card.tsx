@@ -46,7 +46,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         inline-block
         cursor-pointer
         transition-all
-        ${isSelected ? "ring-2 ring-blue-500" : ""}
+        ${isSelected ? "ring-2 ring-blue-500 rounded-xl" : ""}
       `}
       style={{ width: "300px" }} // Fixed width so card size remains consistent
       onClick={onToggle}
