@@ -52,7 +52,7 @@ export const sendDeliveryConfirmationEmail = async (
       from: `Please Forget Me <${ORGANISATION_EMAIL}>`,
       to: recipient.email,
       subject: `Delivery Confirmation: ${request} Request`,
-      text: "This is an email to confirm that your request to be forgotten has been delivered to the relevant organisations.",
+      text: "This is an email to confirm that your request has been delivered to the relevant organisations.",
     };
 
     const body = await mg.messages.create(DOMAIN, data);

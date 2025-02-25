@@ -11,6 +11,10 @@ interface RequestCardProps {
    * (e.g. "Recommended", "Advanced", etc.).
    */
   label?: string;
+  /**
+   * Whether to display a warning icon on the card.
+   */
+  warning?: string;
 }
 
 /**
@@ -35,6 +39,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   isSelected,
   onToggle,
   label,
+  warning,
 }) => {
   // Pre-compute classes for the label background
   const labelClasses = label ? getLabelColor(label) : "";
@@ -108,6 +113,9 @@ const RequestCard: React.FC<RequestCardProps> = ({
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-2">{title}</h2>
           <p className="text-slate-600 mb-4">{description}</p>
+          {warning && isSelected && (
+            <p className="text-red-600 text-sm px-2">* {warning}</p>
+          )}
         </div>
 
         {/* Hidden checkbox for screen readers */}

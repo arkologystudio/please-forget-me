@@ -148,6 +148,7 @@ export default function Home() {
                   isSelected={selectedForms.includes("rtbf")}
                   onToggle={() => toggleRequestSelection("rtbf")}
                   label="Advanced"
+                  warning="This action is irreversible if the request is granted."
                 />
               </div>
 
