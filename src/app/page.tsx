@@ -12,7 +12,9 @@ import { RequestID } from "@/types/requests";
 export default function Home() {
   const [showMore, setShowMore] = React.useState(false);
   const [showForm, setShowForm] = React.useState<boolean>(false);
-  const [selectedForms, setSelectedForms] = React.useState<RequestID[]>(['rtoot']);
+  const [selectedForms, setSelectedForms] = React.useState<RequestID[]>([
+    "rtoot",
+  ]);
 
   const scrollToForm = () => {
     const formSection = document.getElementById("form-section");
@@ -26,7 +28,9 @@ export default function Home() {
 
   const toggleRequestSelection = (request: RequestID) => {
     setSelectedForms((prev) =>
-      prev.includes(request) ? prev.filter((f) => f !== request) : [...prev, request]
+      prev.includes(request)
+        ? prev.filter((f) => f !== request)
+        : [...prev, request]
     );
   };
 
@@ -72,7 +76,8 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-2xl md:text-4xl leading-tight text-slate-700 max-w-3xl mt-8">
-                Please Forget Me helps exercise your personal data rights to AI companies.
+                Please Forget Me helps exercise your personal data rights to AI
+                companies.
               </p>
             </div>
           </div>
@@ -96,37 +101,53 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <section className="bg-slate-900 py-24 flex justify-center flex-col items-center gap-8 " id="form-section">
-        <div className={`w-[calc(100%-2rem)] md:container px-8 py-8 bg-slate-100 rounded-lg space-y-2 flex flex-col items-center transition-all duration-300 ${showForm ? 'md:max-w-2xl' : 'md:max-w-6xl'}`}>
+      <section
+        className="bg-slate-900 py-24 flex justify-center flex-col items-center gap-8 "
+        id="form-section"
+      >
+        <div
+          className={`w-[calc(100%-2rem)] md:container px-8 py-8 bg-slate-100 rounded-lg space-y-2 flex flex-col items-center transition-all duration-300 ${
+            showForm ? "md:max-w-2xl" : "md:max-w-6xl"
+          }`}
+        >
           {showForm ? (
             <div className="w-full">
-              <MainForm selectedForms={selectedForms} closeForm={() => setShowForm(false)} />
-
+              <MainForm
+                selectedForms={selectedForms}
+                closeForm={() => setShowForm(false)}
+              />
             </div>
           ) : (
             <>
-              <h2 className="text-3xl font-semibold text-slate-900 text-center">Exercise your Rights</h2>
-              <p className="text-lg text-slate-600 text-center mt-2">Start by selecting one or more request types below</p>
+              <h2 className="text-3xl font-semibold text-slate-900 text-center">
+                Exercise your Rights
+              </h2>
+              <p className="text-lg text-slate-600 text-center mt-2">
+                Start by selecting one or more request types below
+              </p>
               <div className="flex flex-col md:flex-row gap-8 py-8">
                 <RequestCard
                   title="Opt Out of Training Request"
                   description="Request that your personal data is excluded from any processes involved in training AI systems."
-                  isSelected={selectedForms.includes('rtoot')}
-                  onToggle={() => toggleRequestSelection('rtoot')}
+                  isSelected={selectedForms.includes("rtoot")}
+                  onToggle={() => toggleRequestSelection("rtoot")}
+                  label="Recommended"
                 />
-                
+
                 <RequestCard
                   title="Right to be Hidden Request"
                   description="Request that AI models do not produce outputs containing your personal data."
-                  isSelected={selectedForms.includes('rtbh')}
-                  onToggle={() => toggleRequestSelection('rtbh')}
+                  isSelected={selectedForms.includes("rtbh")}
+                  onToggle={() => toggleRequestSelection("rtbh")}
+                  label="Advanced"
                 />
 
-              <RequestCard
+                <RequestCard
                   title="Right to be Forgotten Request"
                   description="Request that your personal data be erased from the organization's records and no longer processed or used."
-                  isSelected={selectedForms.includes('rtbf')}
-                  onToggle={() => toggleRequestSelection('rtbf')}
+                  isSelected={selectedForms.includes("rtbf")}
+                  onToggle={() => toggleRequestSelection("rtbf")}
+                  label="Advanced"
                 />
               </div>
 
@@ -142,9 +163,7 @@ export default function Home() {
             </>
           )}
         </div>
-      
       </section>
-      
     </div>
   );
 }
